@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ultimate Lotto 6/49 Quebec Optimizer</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="darkModeToggle">
+            <input type="checkbox" id="darkModeToggle" />
+            <div class="slider round"></div>
+        </label>
+        <span class="theme-label">Dark Mode</span>
+    </div>
+    <h1>Ultimate Lotto 6/49 Quebec Optimizer</h1>
+    <p>Advanced statistical analysis and machine learning for optimized number selection</p>
+  </header>
+  
+  <div class="container">
+    <h2>Number Generator</h2>
+    <div class="options">
+      <div class="option-item"><input type="checkbox" id="balanceOddEven" checked><label for="balanceOddEven">Balance Odd/Even (3/3)</label></div>
+      <div class="option-item"><input type="checkbox" id="favorHot"><label for="favorHot">Favor Hot Numbers</label></div>
+      <div class="option-item"><input type="checkbox" id="favorCold"><label for="favorCold">Favor Cold Numbers</label></div>
+      <div class="option-item"><input type="checkbox" id="includeOverdue" checked><label for="includeOverdue">Include Overdue Numbers</label></div>
+      <div class="option-item"><input type="checkbox" id="useML"><label for="useML">Use ML Predictions</label></div>
+    </div>
+    <div class="strategy-selector">
+      <div class="strategy-item active" data-strategy="balanced">Balanced</div>
+      <div class="strategy-item" data-strategy="aggressive">Aggressive</div>
+      <div class="strategy-item" data-strategy="conservative">Conservative</div>
+      <div class="strategy-item" data-strategy="experimental">Experimental</div>
+      <div class="strategy-item" data-strategy="custom">Custom</div>
+    </div>
+    
+    <div id="customStrategyContainer" class="custom-strategy-container" style="display: none;">
+        <h4>Custom Strategy Rules</h4>
+        <div class="custom-rule">
+            <label>Sum Range:</label>
+            <div>
+                <input type="number" id="customSumMin" placeholder="Min" min="21" max="279">
+                <span>-</span>
+                <input type="number" id="customSumMax" placeholder="Max" min="21" max="279">
+            </div>
+        </div>
+        <div class="custom-rule">
+            <label for="customInclude">Include Numbers (space-separated):</label>
+            <input type="text" id="customInclude" placeholder="e.g. 7 15 42">
+        </div>
+        <div class="custom-rule">
+            <label for="customExclude">Exclude Numbers (space-separated):</label>
+            <input type="text" id="customExclude" placeholder="e.g. 4 32 49">
+        </div>
+    </div>
+
+    <div class="button-group">
+      <button id="generateButton">Generate Optimized Numbers</button>
+      <button id="generateMultipleButton">Generate Multiple Sets</button>
+      <button id="trainModelButton" class="secondary">Train ML Model</button>
+      <span id="modelStatus" style="margin-left: 10px; color: var(--warning-color);">Not Trained</span>
+    </div>
+    <div id="trainingProgress" class="progress-container"><div id="trainingProgressBar" class="progress-bar"></div><div id="trainingProgressText" class="progress-text"></div></div>
+    <div id="progressContainer" class="progress-container"><div id="progressBar" class="progress-bar"></div><div id="progressText" class="progress-text"></div></div>
+    
+    <div id="numbersContainer" style="display: none; margin-top: 30px;">
+      <h3>Generated Numbers</h3>
+      <div id="generatedNumbers" style="margin: 20px 0;"></div>
+      <div id="combinationStats" style="margin-bottom: 15px;"></div>
+      <div><span>Confidence: </span><div class="confidence-meter"><div id="confidenceLevel" class="confidence-level"></div></div><span id="confidenceScore" style="margin-left: 10px; font-weight: bold;">0%</span></div>
+      <div class="button-group" style="margin-top: 20px;">
+        <button id="saveComboButton">Save Combination</button>
+        <button id="checkSingleButton" class="secondary">Check Against Last Draw</button>
+      </div>
+      <div id="singleDrawInfo" style="margin-top: 10px; color: #555;"></div>
+    </div>
+    
+    <div id="multipleResultsContainer" style="display: none; margin-top: 30px;"><h3>Multiple Optimized Sets</h3><div id="multipleResults"></div></div>
+  </div>
+  
+  <div class="container">
+    <h2>Statistical Analysis & Tools</h2>
+    <p class="data-source-info">
+        Based on <span id="historicalDrawsCount">0</span> historical draws
+        <button id="refreshDataButton" class="refresh-btn" title="Fetch latest draw data from server">&#x21bb;</button>
+    </p>
+    <div class="tab-container">
+        <div class="tab-buttons">
+            <button class="tab-button active" data-tab="frequency-analysis">Frequency Analysis</button>
+            <button class="tab-button" data-tab="pattern-analysis">Pattern Analysis</button>
+            <button class="tab-button" data-tab="affinity-matrix">Affinity Matrix</button>
+            <button class="tab-button" data-tab="wheeling-system">Wheeling System</button>
+            <button class="tab-button" data-tab="saved-combinations">Saved Combinations</button>
+        </div>
+        
+        <div id="frequency-analysis" class="tab-content" style="display: block;"><div class="chart-container-full"><canvas id="frequencyChart"></canvas></div><h3>Overdue Numbers (Not Drawn Recently)</h3><div id="overdueNumbersDisplay" class="stat-card"></div></div>
+        <div id="pattern-analysis" class="tab-content"><div class="chart-grid"><div class="chart-container"><canvas id="sumChart"></canvas></div><div class="chart-container"><canvas id="oddEvenChart"></canvas></div><div class="chart-container"><canvas id="highLowChart"></canvas></div><div class="chart-container"><h3>Delta Patterns</h3><div id="deltaPatternsDisplay" class="stat-card"></div></div></div></div>
+        <div id="affinity-matrix" class="tab-content"><h3>Number Affinity Analysis</h3><p>This heatmap shows which numbers frequently appear together.</p><div class="heatmap-container"><div id="affinityHeatmap" class="heatmap"></div></div><h3>Strongest Co-Occurring Pairs (Top 5)</h3><div id="strongPairsDisplay" class="stat-card"></div></div>
+        
+        <div id="wheeling-system" class="tab-content">
+          <h3>Wheeling System Generator</h3>
+          <p>Generate a set of tickets that guarantees a prize if a certain amount of winning numbers fall within your selected set.</p>
+          <div class="wheeling-controls">
+              <div class="custom-rule">
+                  <label for="wheelNumbersInput">Enter numbers to wheel (space-separated):</label>
+                  <input type="text" id="wheelNumbersInput" placeholder="e.g., 7 13 22 29 31 40 48">
+              </div>
+              <div class="custom-rule">
+                  <label for="wheelGuaranteeSelect">Select Guarantee:</label>
+                  <select id="wheelGuaranteeSelect">
+                      <option value="full">Full Wheel (All Combinations)</option>
+                      <option value="3-if-4-in-10">Guarantee 3-match if 4 of 10 numbers are drawn (3 tickets)</option>
+                  </select>
+              </div>
+              <div class="button-group">
+                  <button id="generateWheelButton">Generate Wheeled Tickets</button>
+              </div>
+          </div>
+          <div id="wheelResultsContainer" style="display: none;">
+              <h4>Generated Tickets (<span id="wheelTicketCount">0</span>):</h4>
+              <div id="wheelResults"></div>
+          </div>
+        </div>
+        
+        <div id="saved-combinations" class="tab-content">
+          <h3>Your Saved Combinations</h3>
+          <div class="button-group">
+            <button id="checkAllButton">Check All Saved Against Last Draw</button>
+            <button id="clearAllButton" class="danger">Clear All Saved Combinations</button>
+          </div>
+          <div id="allDrawInfo" style="margin-left: 15px; color: #555;"></div>
+          <div id="combinationHistory" class="combination-history"></div>
+        </div>
+    </div>
+  </div>
+  
+  <div class="container"><h2>Algorithm Core Features</h2><div class="algorithm-info"><ul><li>Multi-Factor Weighted Selection & Genetic Algorithm</li><li>Configurable Constraints: Sum, Odd/Even, High/Low, Decades</li><li>Temporal Analysis: Recency, Seasonality, Number Cycles</li><li>Pair/Triplet Affinity Analysis, Delta System (Gap Patterns)</li><li>Optional Machine Learning (Neural Network) for Number Probability Prediction</li><li>Filtering: Last Draw, Historical Wins, Unlikely Mathematical Patterns</li><li>Strategy Profiles & Customization, Combination Saving & Tracking</li></ul></div></div>
+  <div class="footer"><p>Based on analysis of Lotto 6/49 Quebec historical data.</p><p>This tool uses statistical patterns... Play responsibly.</p></div>
+  <div id="notification" class="notification"></div>
+
+  <script src="advanced_ml_model.js"></script> 
+  <script src="optimizer.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
