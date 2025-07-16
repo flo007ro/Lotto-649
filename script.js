@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('http://localhost:3000/api/results');
+            const response = await fetch('https://lotto-649-quebec.onrender.com');
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             historicalData = await response.json();
             historicalData.reverse(); 
