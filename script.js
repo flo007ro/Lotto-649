@@ -1,6 +1,12 @@
-// script.js - FINAL STABLE VERSION WITH BONUS NUMBER LOGIC
+// script.js - FINAL STABLE AND CLEAN VERSION
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- DYNAMIC API ENDPOINT ---
+    // This makes the code work both locally and when deployed.
+    const IS_LOCAL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    // IMPORTANT: Replace 'your-render-app-name' with the actual name of your service on Render.
+    const API_BASE_URL = IS_LOCAL ? 'http://localhost:3000' : 'https://lotto-649-quebec.onrender.com';
+
     // --- State Variables and Chart Instances ---
     let historicalData = [], stats = {}, currentGeneratedComboObject = null;
     let savedCombinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
@@ -29,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('https://lotto-649-quebec.onrender.com');
+            const response = await fetch(`${API_BASE_URL}/api/results`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             historicalData = await response.json();
             historicalData.reverse(); 
@@ -292,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function refreshData() {
         showNotification('Fetching latest data from server...', 'info');
         try {
-            const response = await fetch('http://localhost:3000/api/results');
+            const response = await fetch(`${API_BASE_URL}/api/results`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             
             const newData = await response.json();
@@ -305,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             historicalData = newData;
-            historicalDrawsCountEl.textContent = historicalData.length;
+            document.getElementById('historicalDrawsCount').textContent = historicalData.length;
             stats = Optimizer.analyze(historicalData);
             
             displayStatistics();
@@ -318,8 +324,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Display Functions ---
     function displayStatistics() {
-        overdueNumbersDisplay.innerHTML = createNumberDivs(stats.overdue);
-        deltaPatternsDisplay.innerHTML = stats.deltaPatterns.slice(0, 5).map(p => `[${p.pattern.join(', ')}] - ${p.count} times`).join('<br>');
+        document.getElementById('overdueNumbersDisplay').innerHTML = createNumberDivs(stats.overdue);
+        document.getElementById('deltaPatternsDisplay').innerHTML = stats.deltaPatterns.slice(0, 5).map(p => `[${p.pattern.join(', ')}] - ${p.count} times`).join('<br>');
         displayHeatmap();
         displayStrongPairs();
         renderAllCharts();
@@ -348,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${resultHtml}
                 <span class="saved-confidence">${combo.confidence ? `Conf: ${combo.confidence.toFixed(1)}%` : ''}</span>
                 <span>${new Date(combo.date).toLocaleDateString()}</span>
-                <button class="delete-btn" data-index="${index}" title="Delete Combination">&times;</button>
+                <button class="delete-btn" data-index="${index}" title="Delete Combination">×</button>
             </div>`;
         }).join('');
     }
@@ -397,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CHART RENDERING FUNCTIONS ---
     function renderAllCharts() {
-        const activeTab = document.querySelector('.tab-button.active').dataset.tab;
+        const activeTab = document.querySelector('.tab-button.active')?.dataset.tab;
         if (activeTab === 'frequency-analysis') renderFrequencyChart();
         if (activeTab === 'pattern-analysis') {
             renderSumChart();
@@ -407,7 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function replaceCanvas(chartId) {
-        const container = document.getElementById(chartId).parentElement;
+        const container = document.getElementById(chartId)?.parentElement;
+        if (!container) return null;
         container.innerHTML = `<canvas id="${chartId}"></canvas>`;
         return container.firstElementChild.getContext('2d');
     }
