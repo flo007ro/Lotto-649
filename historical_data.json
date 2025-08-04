@@ -1,5 +1,77 @@
 [
   {
+    "date": "2025-08-02",
+    "numbers": [
+      7,
+      11,
+      23,
+      29,
+      44,
+      46
+    ],
+    "bonus": 42
+  },
+  {
+    "date": "2025-07-30",
+    "numbers": [
+      11,
+      13,
+      15,
+      16,
+      38,
+      48
+    ],
+    "bonus": 25
+  },
+  {
+    "date": "2025-07-26",
+    "numbers": [
+      5,
+      8,
+      13,
+      26,
+      44,
+      49
+    ],
+    "bonus": 47
+  },
+  {
+    "date": "2025-07-23",
+    "numbers": [
+      4,
+      12,
+      19,
+      34,
+      40,
+      42
+    ],
+    "bonus": 5
+  },
+  {
+    "date": "2025-07-19",
+    "numbers": [
+      2,
+      7,
+      22,
+      33,
+      35,
+      44
+    ],
+    "bonus": 3
+  },
+  {
+    "date": "2025-07-16",
+    "numbers": [
+      2,
+      4,
+      9,
+      17,
+      20,
+      46
+    ],
+    "bonus": 31
+  },
+  {
     "date": "2025-07-12",
     "day_of_week": "Saturday",
     "numbers": [
@@ -15941,19 +16013,6 @@
     "date": "2013-02-27",
     "day_of_week": "Wednesday",
     "numbers": [
-      1,
-      2,
-      16,
-      21,
-      47,
-      49
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2013-02-27",
-    "day_of_week": "Wednesday",
-    "numbers": [
       11,
       15,
       19,
@@ -15967,19 +16026,6 @@
     "date": "2013-02-23",
     "day_of_week": "Saturday",
     "numbers": [
-      2,
-      15,
-      22,
-      24,
-      39,
-      46
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2013-02-23",
-    "day_of_week": "Saturday",
-    "numbers": [
       4,
       12,
       19,
@@ -15988,19 +16034,6 @@
       41
     ],
     "bonus": 40
-  },
-  {
-    "date": "2013-02-20",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      5,
-      14,
-      20,
-      28,
-      33,
-      46
-    ],
-    "bonus": 0
   },
   {
     "date": "2013-02-20",
@@ -16029,32 +16062,6 @@
     "bonus": 8
   },
   {
-    "date": "2013-02-16",
-    "day_of_week": "Saturday",
-    "numbers": [
-      10,
-      15,
-      16,
-      38,
-      44,
-      48
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2013-02-13",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      2,
-      24,
-      28,
-      30,
-      32,
-      40
-    ],
-    "bonus": 0
-  },
-  {
     "date": "2013-02-13",
     "day_of_week": "Wednesday",
     "numbers": [
@@ -16066,19 +16073,6 @@
       47
     ],
     "bonus": 16
-  },
-  {
-    "date": "2013-02-09",
-    "day_of_week": "Saturday",
-    "numbers": [
-      9,
-      25,
-      36,
-      41,
-      44,
-      45
-    ],
-    "bonus": 0
   },
   {
     "date": "2013-02-09",
@@ -16097,19 +16091,6 @@
     "date": "2013-02-06",
     "day_of_week": "Wednesday",
     "numbers": [
-      6,
-      7,
-      9,
-      15,
-      17,
-      48
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2013-02-06",
-    "day_of_week": "Wednesday",
-    "numbers": [
       4,
       18,
       23,
@@ -16118,19 +16099,6 @@
       43
     ],
     "bonus": 7
-  },
-  {
-    "date": "2013-02-02",
-    "day_of_week": "Saturday",
-    "numbers": [
-      1,
-      8,
-      13,
-      32,
-      38,
-      43
-    ],
-    "bonus": 0
   },
   {
     "date": "2013-02-02",
@@ -16604,19 +16572,6 @@
     "date": "2012-09-29",
     "day_of_week": "Saturday",
     "numbers": [
-      3,
-      26,
-      31,
-      33,
-      45,
-      48
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-09-29",
-    "day_of_week": "Saturday",
-    "numbers": [
       2,
       7,
       18,
@@ -16631,19 +16586,6 @@
     "day_of_week": "Wednesday",
     "numbers": [
       2,
-      9,
-      10,
-      13,
-      21,
-      29
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-09-26",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      2,
       5,
       9,
       13,
@@ -16651,19 +16593,6 @@
       38
     ],
     "bonus": 37
-  },
-  {
-    "date": "2012-09-22",
-    "day_of_week": "Saturday",
-    "numbers": [
-      6,
-      11,
-      13,
-      25,
-      31,
-      47
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-09-22",
@@ -16692,32 +16621,6 @@
     "bonus": 26
   },
   {
-    "date": "2012-09-19",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      4,
-      24,
-      28,
-      36,
-      37,
-      45
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-09-15",
-    "day_of_week": "Saturday",
-    "numbers": [
-      6,
-      18,
-      26,
-      29,
-      45,
-      49
-    ],
-    "bonus": 0
-  },
-  {
     "date": "2012-09-15",
     "day_of_week": "Saturday",
     "numbers": [
@@ -16729,19 +16632,6 @@
       31
     ],
     "bonus": 17
-  },
-  {
-    "date": "2012-09-12",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      8,
-      11,
-      21,
-      23,
-      42,
-      44
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-09-12",
@@ -16760,19 +16650,6 @@
     "date": "2012-09-08",
     "day_of_week": "Saturday",
     "numbers": [
-      5,
-      10,
-      29,
-      33,
-      36,
-      46
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-09-08",
-    "day_of_week": "Saturday",
-    "numbers": [
       1,
       4,
       6,
@@ -16786,19 +16663,6 @@
     "date": "2012-09-05",
     "day_of_week": "Wednesday",
     "numbers": [
-      6,
-      7,
-      31,
-      38,
-      44,
-      48
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-09-05",
-    "day_of_week": "Wednesday",
-    "numbers": [
       15,
       21,
       23,
@@ -16807,19 +16671,6 @@
       48
     ],
     "bonus": 6
-  },
-  {
-    "date": "2012-09-01",
-    "day_of_week": "Saturday",
-    "numbers": [
-      3,
-      5,
-      20,
-      30,
-      34,
-      47
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-09-01",
@@ -17059,19 +16910,6 @@
     "date": "2012-06-30",
     "day_of_week": "Saturday",
     "numbers": [
-      6,
-      12,
-      14,
-      42,
-      46,
-      47
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-30",
-    "day_of_week": "Saturday",
-    "numbers": [
       12,
       22,
       31,
@@ -17080,71 +16918,6 @@
       47
     ],
     "bonus": 4
-  },
-  {
-    "date": "2012-06-30",
-    "day_of_week": "Saturday",
-    "numbers": [
-      17,
-      24,
-      32,
-      39,
-      44,
-      48
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-30",
-    "day_of_week": "Saturday",
-    "numbers": [
-      8,
-      32,
-      33,
-      36,
-      40,
-      47
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-27",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      27,
-      29,
-      31,
-      35,
-      36,
-      37
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-27",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      9,
-      12,
-      24,
-      28,
-      35,
-      43
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-27",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      13,
-      16,
-      17,
-      27,
-      42,
-      45
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-06-27",
@@ -17164,32 +16937,6 @@
     "day_of_week": "Saturday",
     "numbers": [
       12,
-      21,
-      24,
-      34,
-      42,
-      47
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-23",
-    "day_of_week": "Saturday",
-    "numbers": [
-      28,
-      38,
-      39,
-      43,
-      45,
-      48
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-23",
-    "day_of_week": "Saturday",
-    "numbers": [
-      12,
       19,
       28,
       34,
@@ -17197,45 +16944,6 @@
       41
     ],
     "bonus": 1
-  },
-  {
-    "date": "2012-06-23",
-    "day_of_week": "Saturday",
-    "numbers": [
-      2,
-      3,
-      4,
-      13,
-      42,
-      48
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-20",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      4,
-      18,
-      27,
-      28,
-      31,
-      33
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-20",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      2,
-      3,
-      15,
-      17,
-      25,
-      42
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-06-20",
@@ -17251,19 +16959,6 @@
     "bonus": 11
   },
   {
-    "date": "2012-06-20",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      8,
-      13,
-      17,
-      32,
-      44,
-      48
-    ],
-    "bonus": 0
-  },
-  {
     "date": "2012-06-16",
     "day_of_week": "Saturday",
     "numbers": [
@@ -17277,84 +16972,6 @@
     "bonus": 16
   },
   {
-    "date": "2012-06-16",
-    "day_of_week": "Saturday",
-    "numbers": [
-      4,
-      16,
-      21,
-      22,
-      31,
-      37
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-16",
-    "day_of_week": "Saturday",
-    "numbers": [
-      6,
-      11,
-      12,
-      31,
-      42,
-      44
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-16",
-    "day_of_week": "Saturday",
-    "numbers": [
-      4,
-      14,
-      17,
-      22,
-      28,
-      32
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-13",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      8,
-      14,
-      15,
-      35,
-      37,
-      40
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-13",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      6,
-      7,
-      19,
-      27,
-      38,
-      40
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-13",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      5,
-      7,
-      9,
-      23,
-      28,
-      38
-    ],
-    "bonus": 0
-  },
-  {
     "date": "2012-06-13",
     "day_of_week": "Wednesday",
     "numbers": [
@@ -17366,32 +16983,6 @@
       44
     ],
     "bonus": 16
-  },
-  {
-    "date": "2012-06-09",
-    "day_of_week": "Saturday",
-    "numbers": [
-      12,
-      19,
-      30,
-      36,
-      43,
-      47
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-09",
-    "day_of_week": "Saturday",
-    "numbers": [
-      1,
-      12,
-      20,
-      28,
-      41,
-      43
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-06-09",
@@ -17407,45 +16998,6 @@
     "bonus": 48
   },
   {
-    "date": "2012-06-09",
-    "day_of_week": "Saturday",
-    "numbers": [
-      5,
-      13,
-      26,
-      28,
-      41,
-      47
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-06",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      1,
-      12,
-      27,
-      33,
-      46,
-      49
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-06",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      7,
-      16,
-      36,
-      40,
-      42,
-      44
-    ],
-    "bonus": 0
-  },
-  {
     "date": "2012-06-06",
     "day_of_week": "Wednesday",
     "numbers": [
@@ -17457,32 +17009,6 @@
       39
     ],
     "bonus": 7
-  },
-  {
-    "date": "2012-06-06",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      5,
-      8,
-      16,
-      26,
-      36,
-      42
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-02",
-    "day_of_week": "Saturday",
-    "numbers": [
-      19,
-      20,
-      24,
-      36,
-      47,
-      48
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-06-02",
@@ -17498,58 +17024,6 @@
     "bonus": 40
   },
   {
-    "date": "2012-06-02",
-    "day_of_week": "Saturday",
-    "numbers": [
-      5,
-      28,
-      34,
-      35,
-      38,
-      49
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-06-02",
-    "day_of_week": "Saturday",
-    "numbers": [
-      12,
-      13,
-      15,
-      16,
-      28,
-      41
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-05-30",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      16,
-      22,
-      27,
-      29,
-      44,
-      46
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-05-30",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      7,
-      26,
-      41,
-      43,
-      44,
-      48
-    ],
-    "bonus": 0
-  },
-  {
     "date": "2012-05-30",
     "day_of_week": "Wednesday",
     "numbers": [
@@ -17561,19 +17035,6 @@
       47
     ],
     "bonus": 15
-  },
-  {
-    "date": "2012-05-30",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      16,
-      17,
-      20,
-      29,
-      31,
-      43
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-05-26",
@@ -17787,19 +17248,6 @@
     "date": "2012-03-31",
     "day_of_week": "Saturday",
     "numbers": [
-      12,
-      15,
-      34,
-      44,
-      45,
-      47
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-31",
-    "day_of_week": "Saturday",
-    "numbers": [
       33,
       35,
       36,
@@ -17808,19 +17256,6 @@
       49
     ],
     "bonus": 42
-  },
-  {
-    "date": "2012-03-31",
-    "day_of_week": "Saturday",
-    "numbers": [
-      7,
-      13,
-      14,
-      16,
-      21,
-      24
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-03-28",
@@ -17834,58 +17269,6 @@
       45
     ],
     "bonus": 15
-  },
-  {
-    "date": "2012-03-28",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      8,
-      14,
-      20,
-      26,
-      31,
-      49
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-28",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      3,
-      8,
-      17,
-      32,
-      40,
-      47
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-24",
-    "day_of_week": "Saturday",
-    "numbers": [
-      3,
-      29,
-      31,
-      32,
-      34,
-      48
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-24",
-    "day_of_week": "Saturday",
-    "numbers": [
-      11,
-      30,
-      39,
-      40,
-      41,
-      42
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-03-24",
@@ -17904,32 +17287,6 @@
     "date": "2012-03-21",
     "day_of_week": "Wednesday",
     "numbers": [
-      6,
-      9,
-      14,
-      18,
-      23,
-      33
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-21",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      9,
-      11,
-      21,
-      24,
-      39,
-      43
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-21",
-    "day_of_week": "Wednesday",
-    "numbers": [
       23,
       27,
       32,
@@ -17938,19 +17295,6 @@
       45
     ],
     "bonus": 35
-  },
-  {
-    "date": "2012-03-17",
-    "day_of_week": "Saturday",
-    "numbers": [
-      18,
-      21,
-      27,
-      34,
-      39,
-      45
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-03-17",
@@ -17966,19 +17310,6 @@
     "bonus": 30
   },
   {
-    "date": "2012-03-17",
-    "day_of_week": "Saturday",
-    "numbers": [
-      6,
-      12,
-      17,
-      23,
-      29,
-      36
-    ],
-    "bonus": 0
-  },
-  {
     "date": "2012-03-14",
     "day_of_week": "Wednesday",
     "numbers": [
@@ -17990,58 +17321,6 @@
       20
     ],
     "bonus": 47
-  },
-  {
-    "date": "2012-03-14",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      7,
-      8,
-      22,
-      36,
-      42,
-      46
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-14",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      14,
-      27,
-      37,
-      39,
-      43,
-      45
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-10",
-    "day_of_week": "Saturday",
-    "numbers": [
-      11,
-      21,
-      33,
-      38,
-      40,
-      48
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-10",
-    "day_of_week": "Saturday",
-    "numbers": [
-      3,
-      7,
-      18,
-      26,
-      36,
-      42
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-03-10",
@@ -18060,19 +17339,6 @@
     "date": "2012-03-07",
     "day_of_week": "Wednesday",
     "numbers": [
-      8,
-      16,
-      24,
-      28,
-      44,
-      45
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-07",
-    "day_of_week": "Wednesday",
-    "numbers": [
       5,
       7,
       39,
@@ -18081,45 +17347,6 @@
       46
     ],
     "bonus": 25
-  },
-  {
-    "date": "2012-03-07",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      1,
-      11,
-      23,
-      27,
-      28,
-      44
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-03",
-    "day_of_week": "Saturday",
-    "numbers": [
-      19,
-      29,
-      32,
-      40,
-      43,
-      46
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2012-03-03",
-    "day_of_week": "Saturday",
-    "numbers": [
-      5,
-      8,
-      15,
-      16,
-      41,
-      46
-    ],
-    "bonus": 0
   },
   {
     "date": "2012-03-03",
@@ -18593,19 +17820,6 @@
     "date": "2011-10-29",
     "day_of_week": "Saturday",
     "numbers": [
-      16,
-      21,
-      24,
-      31,
-      35,
-      39
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2011-10-29",
-    "day_of_week": "Saturday",
-    "numbers": [
       5,
       8,
       13,
@@ -18629,19 +17843,6 @@
     "bonus": 44
   },
   {
-    "date": "2011-10-26",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      5,
-      22,
-      23,
-      40,
-      44,
-      48
-    ],
-    "bonus": 0
-  },
-  {
     "date": "2011-10-22",
     "day_of_week": "Saturday",
     "numbers": [
@@ -18653,32 +17854,6 @@
       46
     ],
     "bonus": 22
-  },
-  {
-    "date": "2011-10-22",
-    "day_of_week": "Saturday",
-    "numbers": [
-      10,
-      17,
-      20,
-      41,
-      46,
-      48
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2011-10-19",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      5,
-      7,
-      11,
-      17,
-      24,
-      48
-    ],
-    "bonus": 0
   },
   {
     "date": "2011-10-19",
@@ -18697,19 +17872,6 @@
     "date": "2011-10-15",
     "day_of_week": "Saturday",
     "numbers": [
-      4,
-      13,
-      15,
-      20,
-      26,
-      41
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2011-10-15",
-    "day_of_week": "Saturday",
-    "numbers": [
       14,
       24,
       27,
@@ -18723,19 +17885,6 @@
     "date": "2011-10-12",
     "day_of_week": "Wednesday",
     "numbers": [
-      10,
-      15,
-      16,
-      18,
-      23,
-      26
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2011-10-12",
-    "day_of_week": "Wednesday",
-    "numbers": [
       6,
       7,
       12,
@@ -18744,19 +17893,6 @@
       40
     ],
     "bonus": 43
-  },
-  {
-    "date": "2011-10-08",
-    "day_of_week": "Saturday",
-    "numbers": [
-      9,
-      23,
-      29,
-      42,
-      43,
-      47
-    ],
-    "bonus": 0
   },
   {
     "date": "2011-10-08",
@@ -18776,19 +17912,6 @@
     "day_of_week": "Wednesday",
     "numbers": [
       7,
-      11,
-      12,
-      16,
-      30,
-      41
-    ],
-    "bonus": 0
-  },
-  {
-    "date": "2011-10-05",
-    "day_of_week": "Wednesday",
-    "numbers": [
-      7,
       10,
       13,
       19,
@@ -18796,19 +17919,6 @@
       29
     ],
     "bonus": 23
-  },
-  {
-    "date": "2011-10-01",
-    "day_of_week": "Saturday",
-    "numbers": [
-      12,
-      19,
-      22,
-      26,
-      44,
-      47
-    ],
-    "bonus": 0
   },
   {
     "date": "2011-10-01",
