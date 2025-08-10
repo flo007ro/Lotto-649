@@ -1,9 +1,14 @@
-// generation.worker.js - ENTIRE CLEANED AND CORRECTED FILE
+// generation.worker.js - FINAL STABLE VERSION WITH MONTE CARLO SIMULATION
+
+console.log("[Worker] Generation worker script loaded successfully.");
 
 const POPULATION_SIZE = 150;
 const GENERATIONS = 80;
 const MUTATION_RATE = 0.05;
 const ELITISM_COUNT = 2;
+const MONTE_CARLO_SIMULATIONS = 10000;
+
+let monteCarloProfile = null;
 
 const STRATEGY_WEIGHTS = {
     balanced:     { sum: 1.0, oddEven: 1.0, highLow: 1.0, decades: 1.0, hot: 1.0, cold: 0.5, overdue: 1.0 },
@@ -14,6 +19,7 @@ const STRATEGY_WEIGHTS = {
 
 
 self.onmessage = function(e) {
+    console.log("[Worker] Message received from main script.");
     try {
         const { type, payload } = e.data;
         if (type === 'generate') {
@@ -27,7 +33,60 @@ self.onmessage = function(e) {
     }
 };
 
+function runMonteCarloSimulation() {
+    console.log("[Monte Carlo] Running simulations to build random profile...");
+    let totalSum = 0;
+    const oddCounts = new Array(7).fill(0);
+    const highCounts = new Array(7).fill(0);
+    const decadeSpreads = new Array(6).fill(0);
+
+    for (let i = 0; i < MONTE_CARLO_SIMULATIONS; i++) {
+        const combo = new Set();
+        while (combo.size < 6) {
+            combo.add(Math.floor(Math.random() * 49) + 1);
+        }
+        const numbers = Array.from(combo);
+
+        totalSum += numbers.reduce((a, b) => a + b, 0);
+        const oddCount = numbers.filter(n => n % 2 !== 0).length;
+        oddCounts[oddCount]++;
+        const highCount = numbers.filter(n => n > 24).length;
+        highCounts[highCount]++;
+        const decades = new Set(numbers.map(n => Math.floor((n - 1) / 10)));
+        decadeSpreads[decades.size]++;
+    }
+
+    const findMostCommon = (arr) => arr.indexOf(Math.max(...arr));
+
+    monteCarloProfile = {
+        averageSum: totalSum / MONTE_CARLO_SIMULATIONS,
+        mostCommonOddCount: findMostCommon(oddCounts),
+        mostCommonHighCount: findMostCommon(highCounts),
+        mostCommonDecadeSpread: findMostCommon(decadeSpreads)
+    };
+    console.log("[Monte Carlo] Simulation complete. Profile:", monteCarloProfile);
+}
+
+function calculateRandomnessScore(numbers) {
+    if (!monteCarloProfile) return 0;
+    let score = 0;
+    const sum = numbers.reduce((a, b) => a + b, 0);
+    score += Math.max(0, 10 - (Math.abs(sum - monteCarloProfile.averageSum) / 5));
+    const oddCount = numbers.filter(n => n % 2 !== 0).length;
+    if (oddCount === monteCarloProfile.mostCommonOddCount) score += 4;
+    const highCount = numbers.filter(n => n > 24).length;
+    if (highCount === monteCarloProfile.mostCommonHighCount) score += 3;
+    const decades = new Set(numbers.map(n => Math.floor((n - 1) / 10)));
+    if (decades.size === monteCarloProfile.mostCommonDecadeSpread) score += 3;
+    return score;
+}
+
 function runGeneticAlgorithm(stats, options, mlPredictions, count = 1) {
+    console.log("[Worker] Starting Genetic Algorithm...");
+    if (!monteCarloProfile) {
+        runMonteCarloSimulation();
+    }
+    
     let population = createInitialPopulation(stats, options, mlPredictions);
 
     for (let i = 0; i < GENERATIONS; i++) {
@@ -68,9 +127,9 @@ function runGeneticAlgorithm(stats, options, mlPredictions, count = 1) {
         }
     }
 
+    console.log(`[Worker] Genetic Algorithm finished. Found ${uniqueResults.length} unique combinations.`);
     return uniqueResults.slice(0, count);
 }
-
 
 function calculateConfidence(numbers, stats, mlPredictions, strategy = 'balanced', customRules = null) {
     numbers.sort((a, b) => a - b);
@@ -85,7 +144,9 @@ function calculateConfidence(numbers, stats, mlPredictions, strategy = 'balanced
     }
 
     let score = 0;
-    const MAX_SCORE = 100;
+    const MAX_HISTORICAL_SCORE = 100;
+    const MAX_RANDOM_SCORE = 20;
+
     const weights = STRATEGY_WEIGHTS[strategy] || STRATEGY_WEIGHTS.balanced;
     const sum = numbers.reduce((a, b) => a + b, 0);
     const oddCount = numbers.filter(n => n % 2 !== 0).length;
@@ -124,7 +185,9 @@ function calculateConfidence(numbers, stats, mlPredictions, strategy = 'balanced
     for (let i = 0; i < numbers.length - 1; i++) if (numbers[i+1] === numbers[i] + 1) consecutivePairs++;
     score -= consecutivePairs * 7;
 
-    const finalConfidence = Math.max(0, Math.min(100, (score / (MAX_SCORE + 20)) * 100));
+    score += calculateRandomnessScore(numbers);
+
+    const finalConfidence = Math.max(0, Math.min(100, (score / (MAX_HISTORICAL_SCORE + MAX_RANDOM_SCORE)) * 100));
 
     return { numbers, sum, oddEven: `${oddCount}O/${6-oddCount}E`, highLow: `${highCount}H/${6-highCount}L`, confidence: finalConfidence };
 }

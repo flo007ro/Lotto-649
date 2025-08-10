@@ -1,5 +1,3 @@
-// optimizer.js - ENTIRE FILE
-
 const Optimizer = {
     analyze(data) {
         // ... (no changes in the first part of the function)
@@ -73,5 +71,26 @@ const Optimizer = {
             deltaPatterns: Object.entries(deltaPatterns).map(([pattern, count]) => ({ pattern: JSON.parse(pattern), count }))
                 .sort((a, b) => b.count - a.count).slice(0, 10), // Return top 10 delta patterns
         };
+    },
+    monteCarloScore(candidate, stats, simulations = 5000, minMatch = 3) {
+        let wins = 0;
+        const probs = stats.frequency.slice(1).map((f, i) => ({ num: i+1, prob: f / stats.frequency.reduce((a,b)=>a+b,0) }));
+        for (let i = 0; i < simulations; i++) {
+            let simDraw = [];
+            while (simDraw.length < 6) {
+                const rand = Math.random();
+                let cumProb = 0;
+                for (const p of probs) {
+                    cumProb += p.prob;
+                    if (rand <= cumProb && !simDraw.includes(p.num)) {
+                        simDraw.push(p.num);
+                        break;
+                    }
+                }
+            }
+            const matches = candidate.filter(n => simDraw.includes(n)).length;
+            if (matches >= minMatch) wins++;
+        }
+        return (wins / simulations) * 100;  // % chance
     }
 };

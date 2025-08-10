@@ -2,9 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- DYNAMIC API ENDPOINT ---
-    // This makes the code work both locally and when deployed.
     const IS_LOCAL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    // IMPORTANT: Replace 'your-render-app-name' with the actual name of your service on Render.
     const API_BASE_URL = IS_LOCAL ? 'http://localhost:3000' : 'https://lotto-649-quebec.onrender.com';
 
     // --- State Variables and Chart Instances ---
@@ -26,6 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const notificationEl = document.getElementById('notification');
     const customStrategyContainer = document.getElementById('customStrategyContainer');
     const generationWorker = new Worker('generation.worker.js');
+    const downloadModelButton = document.getElementById('downloadModelButton');
+    const uploadModelInput = document.getElementById('uploadModelInput');
 
     // --- Initialization ---
     async function initializeApp() {
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.add('dark-mode');
             darkModeToggle.checked = true;
         }
-
+        updateModelStatus(false, 'No Model Loaded');
         try {
             const response = await fetch(`${API_BASE_URL}/api/results`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
             stats = Optimizer.analyze(historicalData);
             displayStatistics();
             displaySavedCombinations();
-            await checkMLModelStatus();
         } catch (error) {
             console.error("Error connecting to backend:", error);
             showNotification('Could not connect to the backend server. Is it running?', 'error');
@@ -66,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('clearAllButton').addEventListener('click', clearAllSaved);
     document.getElementById('generateWheelButton').addEventListener('click', generateWheel);
     document.getElementById('refreshDataButton').addEventListener('click', refreshData);
+    document.getElementById('useOverdueForWheelButton').addEventListener('click', useOverdueForWheel);
     
     document.querySelectorAll('.tab-button').forEach(tab => tab.addEventListener("click", () => {
         document.querySelector('.tab-button.active').classList.remove('active');
@@ -103,6 +103,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    uploadModelInput.addEventListener('change', async function(e) {
+        const files = e.target.files;
+        if (!files || files.length !== 2) {
+            showNotification('Please select both the model.json and model.weights.bin files.', 'error');
+            return;
+        }
+        const jsonFile = Array.from(files).find(file => file.name.endsWith('.json'));
+        const weightsFile = Array.from(files).find(file => file.name.endsWith('.bin'));
+
+        if (!jsonFile || !weightsFile) {
+            showNotification('Both .json and .bin files are required.', 'error');
+            return;
+        }
+        try {
+            ML_Model.model = await tf.loadLayersModel(tf.io.browserFiles([jsonFile, weightsFile]));
+            updateModelStatus(true, 'Model Loaded');
+            showNotification('Model loaded successfully!', 'success');
+        } catch (error) {
+            console.error("Error loading model:", error);
+            updateModelStatus(false, 'Failed to load model.');
+            showNotification('Failed to load model files.', 'error');
+        }
+    });
+
+    downloadModelButton.addEventListener('click', async () => {
+        if (ML_Model.model) {
+            await ML_Model.model.save('downloads://my-lotto-model');
+            showNotification('Model files downloaded!', 'success');
+        } else {
+            showNotification('No model is currently trained to download.', 'warning');
+        }
+    });
+
     generationWorker.onmessage = function(e) {
         const { type, payload } = e.data;
         if (type === 'progress') {
@@ -131,11 +164,11 @@ document.addEventListener('DOMContentLoaded', () => {
         showProgressBar('progressContainer', true);
         let mlPredictions = null;
         if (options.useML) {
-            if (await ML_Model.modelExists()) {
+            if (ML_Model.model) {
                 mlPredictions = await ML_Model.predict(historicalData);
-                showNotification(mlPredictions ? 'Using ML model for predictions.' : 'Could not generate ML predictions.', mlPredictions ? 'info' : 'warning');
+                showNotification('Using ML model for predictions.', 'info');
             } else {
-                showNotification('ML model not trained. Ignoring ML option.', 'warning');
+                showNotification('ML model not loaded. Ignoring ML option.', 'warning');
             }
         }
         generationWorker.postMessage({ type: 'generate', payload: { stats, options, count, historicalData, mlPredictions } });
@@ -147,13 +180,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         showProgressBar('trainingProgress', true);
-        modelStatusEl.textContent = 'Training...';
+        updateModelStatus(false, 'Training...');
+        downloadModelButton.style.display = 'none';
         try {
-            await ML_Model.train(historicalData, (p) => updateProgressBar(document.getElementById('trainingProgressBar'), document.getElementById('trainingProgressText'), p));
-            modelStatusEl.textContent = 'Trained';
-            showNotification('ML Model trained successfully!', 'success');
+            const trainedModel = await ML_Model.train(historicalData, (p) => updateProgressBar(document.getElementById('trainingProgressBar'), document.getElementById('trainingProgressText'), p));
+            if (trainedModel) {
+                ML_Model.model = trainedModel;
+                updateModelStatus(true, 'Model Trained');
+                downloadModelButton.style.display = 'inline-block';
+                showNotification('Training complete! Click "Download Model" to save it.', 'success');
+            } else {
+                throw new Error("Training did not return a valid model.");
+            }
         } catch (error) {
-            modelStatusEl.textContent = 'Training Failed';
+            console.error("ML Model training failed:", error);
+            updateModelStatus(false, 'Training Failed');
             showNotification('ML Model training failed. See console.', 'error');
         } finally {
             showProgressBar('trainingProgress', false);
@@ -294,6 +335,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         displayWheeledTickets(wheeledTickets);
     }
+    
+    function useOverdueForWheel() {
+        if (stats && stats.overdue) {
+            const overdueNumbers = stats.overdue.slice(0, 10).join(' ');
+            document.getElementById('wheelNumbersInput').value = overdueNumbers;
+            showNotification('Overdue numbers have been populated.', 'info');
+        } else {
+            showNotification('Statistics not available yet. Please wait a moment.', 'warning');
+        }
+    }
 
     async function refreshData() {
         showNotification('Fetching latest data from server...', 'info');
@@ -311,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             historicalData = newData;
-            document.getElementById('historicalDrawsCount').textContent = historicalData.length;
+            historicalDrawsCountEl.textContent = historicalData.length;
             stats = Optimizer.analyze(historicalData);
             
             displayStatistics();
@@ -354,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${resultHtml}
                 <span class="saved-confidence">${combo.confidence ? `Conf: ${combo.confidence.toFixed(1)}%` : ''}</span>
                 <span>${new Date(combo.date).toLocaleDateString()}</span>
-                <button class="delete-btn" data-index="${index}" title="Delete Combination">×</button>
+                <button class="delete-btn" data-index="${index}" title="Delete Combination">&times;</button>
             </div>`;
         }).join('');
     }
@@ -579,10 +630,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return options;
     }
 
-    async function checkMLModelStatus() {
-        const modelExists = await ML_Model.modelExists();
-        modelStatusEl.textContent = modelExists ? 'Trained' : 'Not Trained';
-        modelStatusEl.style.color = modelExists ? 'var(--success-color)' : 'var(--warning-color)';
+    function updateModelStatus(isTrained, message) {
+        modelStatusEl.textContent = message;
+        modelStatusEl.style.color = isTrained ? 'var(--success-color)' : 'var(--warning-color)';
     }
 
     function showProgressBar(id, show) {

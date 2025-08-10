@@ -61,9 +61,16 @@
     <div class="button-group">
       <button id="generateButton">Generate Optimized Numbers</button>
       <button id="generateMultipleButton">Generate Multiple Sets</button>
-      <button id="trainModelButton" class="secondary">Train ML Model</button>
-      <span id="modelStatus" style="margin-left: 10px; color: var(--warning-color);">Not Trained</span>
     </div>
+
+    <div class="button-group ml-controls">
+      <button id="trainModelButton" class="secondary">Train New ML Model</button>
+      <button id="downloadModelButton" class="secondary" style="display: none;">Download Trained Model</button>
+      <label for="uploadModelInput" class="button">Load Model from File</label>
+      <input type="file" id="uploadModelInput" multiple style="display: none;" />
+      <span id="modelStatus" style="margin-left: 10px; color: var(--warning-color);">No Model Loaded</span>
+    </div>
+    
     <div id="trainingProgress" class="progress-container"><div id="trainingProgressBar" class="progress-bar"></div><div id="trainingProgressText" class="progress-text"></div></div>
     <div id="progressContainer" class="progress-container"><div id="progressBar" class="progress-bar"></div><div id="progressText" class="progress-text"></div></div>
     
@@ -107,7 +114,10 @@
           <div class="wheeling-controls">
               <div class="custom-rule">
                   <label for="wheelNumbersInput">Enter numbers to wheel (space-separated):</label>
-                  <input type="text" id="wheelNumbersInput" placeholder="e.g., 7 13 22 29 31 40 48">
+                  <div class="input-with-button">
+                    <input type="text" id="wheelNumbersInput" placeholder="e.g., 7 13 22 29 31 40 48">
+                    <button id="useOverdueForWheelButton" class="secondary" title="Populate with the 10 most overdue numbers">Use Overdue</button>
+                  </div>
               </div>
               <div class="custom-rule">
                   <label for="wheelGuaranteeSelect">Select Guarantee:</label>
@@ -138,7 +148,9 @@
     </div>
   </div>
   
-  <div class="container"><h2>Algorithm Core Features</h2><div class="algorithm-info"><ul><li>Multi-Factor Weighted Selection & Genetic Algorithm</li><li>Configurable Constraints: Sum, Odd/Even, High/Low, Decades</li><li>Temporal Analysis: Recency, Seasonality, Number Cycles</li><li>Pair/Triplet Affinity Analysis, Delta System (Gap Patterns)</li><li>Optional Machine Learning (Neural Network) for Number Probability Prediction</li><li>Filtering: Last Draw, Historical Wins, Unlikely Mathematical Patterns</li><li>Strategy Profiles & Customization, Combination Saving & Tracking</li></ul></div></div>
+  <div class="container"><h2>Algorithm Core Features</h2><div class="algorithm-info"><ul><li>Multi-Factor Weighted Selection & Genetic Algorithm</li><li>Configurable Constraints: Sum, Odd/Even, High/Low, Decades</li><li>Temporal Analysis: Recency, Seasonality, Number Cycles</li><li>Pair/Triplet Affinity Analysis, Delta System (Gap Patterns)</li><li>Optional Machine Learning (LSTM Network) for Number Probability Prediction</li><li>Strategy Profiles & Full Customization, Combination Saving & Tracking</li>
+        <li>Monte Carlo Simulations for Probabilistic Scoring</li>
+        <li>Wheeling Systems for Guaranteed Matches</li></ul></div></div>
   <div class="footer"><p>Based on analysis of Lotto 6/49 Quebec historical data.</p><p>This tool uses statistical patterns... Play responsibly.</p></div>
   <div id="notification" class="notification"></div>
 

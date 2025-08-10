@@ -11,7 +11,7 @@
   --border-color: #ddd;
   --danger-color: #D32F2F;
   --success-color: #388E3C;
-  --bonus-color: #FF8F00; /* Orange/Gold for Bonus */
+  --bonus-color: #FF8F00;
   --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -101,3 +101,7 @@ input:checked + .slider:before { transform: translateX(26px); }
 p.data-source-info { display: flex; align-items: center; }
 .refresh-btn { background: none; border: 1px solid var(--border-color); color: var(--text-color); padding: 2px 8px; margin-left: 10px; cursor: pointer; border-radius: 50%; font-size: 1rem; line-height: 1; }
 .refresh-btn:hover { background-color: var(--background-color); color: var(--primary-color); }
+.ml-controls { border-top: 1px solid var(--border-color); padding-top: 20px; }
+label.button { display: inline-block; padding: 12px 20px; cursor: pointer; border-radius: var(--border-radius); background-color: var(--accent-color); color: var(--text-color); transition: background-color 0.3s ease; }
+.input-with-button { display: flex; gap: 10px; }
+.input-with-button input { flex-grow: 1; }
