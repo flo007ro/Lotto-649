@@ -48,7 +48,28 @@ test('worker preserves full history, 100-draw warmup, baseline population and pr
     assert.equal(result.baseline.dateRange.end, '2020-04-12');
     assert.equal(result.strategy.grossReturn, null);
     assert.equal(result.simulation, null);
+    assert.deepEqual(Object.keys(result.candidates).sort(), ['balanced', 'frequent', 'return']);
+    for (const mode of ['frequent', 'return', 'balanced']) {
+        assert.equal(result.candidates[mode].strategy, mode);
+        assert.equal(result.candidates[mode].evaluatedDrawCount, 3);
+        assert.equal(result.candidates[mode].dateRange.end, result.baseline.dateRange.end);
+        const expected = require('../backtester').runWalkForwardBacktest({ draws, strategy: mode, budget: 3, seed: 9, warmup: 100 });
+        assert.deepEqual(JSON.parse(JSON.stringify(result.candidates[mode])), expected);
+    }
+    assert.equal(result.candidates.return, result.strategy);
+    assert.ok(messages.some(m => m.type === 'progress' && m.payload.total === 12));
+    assert.ok(messages.some(m => m.type === 'progress' && /comparison pass/.test(m.payload.phase)));
     assert.ok(messages.filter(m => m.type === 'progress').length >= 2);
+});
+
+test('optional Jev card explains metrics and configuration without winning claims', () => {
+    const html = read('index.html');
+    assert.match(html, /id="jevDecisionCard"/);
+    assert.match(html, /supplied historical\/mathematical metrics/);
+    assert.match(html, /id="requestJevDecisionButton"[^>]*disabled/);
+    assert.match(html, /Assessment confidence/);
+    assert.match(read('jev-config.js'), /endpoint:\s*''/);
+    for (const name of ['jev-config.js', 'jev-client.js', 'script.js', 'index.html']) assert.doesNotMatch(read(name), /TYPESAFE_API_KEY/);
 });
 
 test('client refresh reads same-origin published snapshots and never backend scraper', () => {
@@ -61,7 +82,7 @@ test('client refresh reads same-origin published snapshots and never backend scr
 });
 
 // Browser boundaries only: run the real app handlers with a failed network and controlled workers.
-function appHarness() {
+function appHarness(globals = {}) {
     const nodes = {}, workers = [];
     let ready;
     const node = id => nodes[id] ||= { style: {}, value: id === 'prizeBudget' ? '30' : '1', handlers: {},
@@ -70,7 +91,7 @@ function appHarness() {
         document: { addEventListener(_event, fn) { ready = fn; }, getElementById: node, querySelectorAll() { return []; }, querySelector() { return { value: 'balanced' }; } },
         localStorage: { getItem() { return null; } },
         Worker: class { constructor() { workers.push(this); } postMessage() {} terminate() {} },
-        fetch: async () => ({ ok: false }), console: { error() {} }, setTimeout() {}, Intl, Date
+        fetch: async () => ({ ok: false }), console: { error() {} }, setTimeout() {}, Intl, Date, ...globals
     });
     vm.runInContext(read('script.js'), context);
     ready();
@@ -82,6 +103,46 @@ test('failed initial snapshot load replaces loading status with unavailable', as
     await new Promise(resolve => setImmediate(resolve));
     assert.match(nodes.dataStatus.innerHTML, /unavailable/);
     assert.match(nodes.notification.textContent, /Could not load/);
+});
+
+test('Jev requests require a click and failure preserves the mathematical dashboard', async () => {
+    const client = require('../jev-client');
+    let calls = 0;
+    const { nodes, workers } = appHarness({ JEV_CONFIG: { endpoint: 'https://example.com/api' }, JevClient: {
+        ...client, async requestDecision(_endpoint, request) { calls++; assert.equal(request.objective, 'balanced'); return { available: false, message: 'Jev assessment unavailable.' }; }
+    } });
+    assert.equal(nodes.requestJevDecisionButton.disabled, true);
+    nodes.generatePrizeTicketsButton.handlers.click();
+    const worker = workers.at(-1);
+    const Backtester = require('../backtester');
+    const candidates = Object.fromEntries(['frequent','return','balanced'].map(strategy => [strategy, Backtester.runWalkForwardBacktest({ draws: [], strategy, budget: 3 })]));
+    worker.onmessage({ data: { type: 'result', payload: { strategy: candidates.balanced, candidates, baseline: Backtester.createQuickPickBaseline({ draws: [], budget: 3 }), simulation: null } } });
+    assert.equal(calls, 0);
+    assert.equal(nodes.requestJevDecisionButton.disabled, false);
+    const html = nodes.backtestDashboard.innerHTML;
+    await nodes.requestJevDecisionButton.handlers.click();
+    assert.equal(calls, 1);
+    assert.equal(nodes.backtestDashboard.innerHTML, html);
+    assert.match(nodes.jevStatus.textContent, /unavailable/);
+});
+
+test('late Jev response cannot restore assessment after settings invalidate it', async () => {
+    const client = require('../jev-client');
+    let complete;
+    const { nodes, workers } = appHarness({ JEV_CONFIG: { endpoint: 'https://example.com/api' }, JevClient: {
+        ...client, requestDecision() { return new Promise(resolve => { complete = resolve; }); }
+    } });
+    nodes.generatePrizeTicketsButton.handlers.click();
+    const Backtester = require('../backtester');
+    const candidates = Object.fromEntries(['frequent','return','balanced'].map(strategy => [strategy, Backtester.runWalkForwardBacktest({ draws: [], strategy, budget: 3 })]));
+    workers.at(-1).onmessage({ data: { type: 'result', payload: { strategy: candidates.balanced, candidates, baseline: Backtester.createQuickPickBaseline({ draws: [], budget: 3 }), simulation: null } } });
+    const pending = nodes.requestJevDecisionButton.handlers.click();
+    nodes.generatePrizeTicketsButton.handlers.click();
+    complete({ mode: 'balanced', confidence: 0.9, score: 1, assessment: 0.7, model: 'jev-latest', usage: { input_tokens: null, output_tokens: null } });
+    await pending;
+    assert.equal(nodes.jevDecisionResult.innerHTML, '');
+    assert.equal(nodes.requestJevDecisionButton.disabled, true);
+    assert.match(nodes.jevStatus.textContent, /Complete a full-history/);
 });
 
 test('late worker events after cancellation cannot overwrite the cancelled state', () => {

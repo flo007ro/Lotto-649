@@ -11,16 +11,23 @@ self.onmessage = ({ data: { type, payload } }) => {
         const { draws, tickets } = payload;
         const eligible = Math.max(0, draws.filter(draw => PrizeEngine.normalizeDraw(draw)).length - 100);
         let completed = 0;
-        const report = phase => self.postMessage({ type: 'progress', payload: { phase, completed, total: eligible * 2 } });
+        const report = phase => self.postMessage({ type: 'progress', payload: { phase, completed, total: eligible * 4 } });
         const generator = phase => options => {
             const result = PrizeOptimizer.generatePrizeTicketSet(options);
             completed++;
-            if (completed % 25 === 0 || completed === eligible || completed === eligible * 2) report(phase);
+            if (completed % 25 === 0 || (eligible && completed % eligible === 0)) report(phase);
             return result;
         };
         const options = { draws, strategy, budget, seed, warmup: 100 };
         report('Historical strategy replay');
         const result = Backtester.runWalkForwardBacktest({ ...options, generateTickets: generator('Historical strategy replay') });
+        const candidates = { [strategy]: result };
+        for (const mode of ['frequent', 'return', 'balanced']) {
+            if (mode === strategy) continue;
+            const phase = `${mode} strategy comparison pass (additional historical replay)`;
+            report(phase);
+            candidates[mode] = Backtester.runWalkForwardBacktest({ ...options, strategy: mode, generateTickets: generator(phase) });
+        }
         report('Equal-budget Quick Pick replay');
         const baseline = Backtester.createQuickPickBaseline({ ...options, generateTickets: generator('Equal-budget Quick Pick replay') });
         // A recorded payout table is a disclosed scenario, never a historical substitute.
@@ -31,7 +38,7 @@ self.onmessage = ({ data: { type, payload } }) => {
             report('Fair-draw scenario simulation');
             simulation = { ...Backtester.simulateFairDraws({ tickets, payoutTable: scenario.payouts, simulations: 10000, seed }), scenarioDate: scenario.date };
         }
-        self.postMessage({ type: 'result', payload: { strategy: result, baseline, simulation } });
+        self.postMessage({ type: 'result', payload: { strategy: result, baseline, simulation, candidates } });
     } catch (error) {
         self.postMessage({ type: 'error', payload: { message: error.message } });
     }

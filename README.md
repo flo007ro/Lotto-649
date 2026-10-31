@@ -51,7 +51,7 @@ Serve this directory with an HTTP static server (for example `python -m http.ser
 
 Choose Frequent Wins, Return analysis (the Maximum Return strategy), or Balanced. Balanced is the default. Enter a positive budget divisible by $3 and an integer seed; ticket count is read-only. Generate a group to see exact pair/triplet coverage and tickets. The strategies redistribute coverage, not expected profit. Return analysis searches by triplet/pair coverage and compares measured outcomes; it does not rank numbers by a monetary advantage.
 
-Run full-history comparison to rebuild a ticket group for each chronological draw after a 100-valid-draw warmup. The worker retains the entire eligible range and runs an equal-budget, equal-date Quick Pick baseline without coverage search. Seed, evaluated dates, invalid/warmup exclusions, and incomplete payout exclusions appear separately. Changing settings invalidates old results; calculation can be cancelled. A $30 replay of the bundled history can take tens of seconds or longer depending on the device and budget.
+Run full-history comparison to rebuild a ticket group for each chronological draw after a 100-valid-draw warmup. The worker runs all three strategies on the same history, budget, seed schedule and dates, plus an equal-budget Quick Pick baseline without coverage search. The dashboard retains the selected strategy and Quick Pick comparison. Progress labels the additional strategy passes; these increase calculation time. Seed, evaluated dates, invalid/warmup exclusions, and incomplete payout exclusions appear separately. Changing settings invalidates old results; calculation can be cancelled. A $30 replay of the bundled history can take tens of seconds or longer depending on the device and budget.
 
 Coverage of the displayed group is separate from historical results of the strategy. Prize counts and Free Plays cover all evaluated tickets. Dollar totals, $10+ cash rates, break-even rates, and outcome distributions use complete payout records only. Each Free Play counts as $3. Break-even rate includes zero or positive net return; the distribution's middle bucket is exactly zero. Rates show their numerator and denominator. With no complete records, financial metrics say **Unavailable**, never $0.
 
@@ -69,4 +69,14 @@ Validate the parser locally without writing either published file:
 node scripts/update-official-results.js --fixture test/fixtures/loto-quebec-valid-result.html --dry-run
 ```
 
-No API key or paid service is required. Jev integration is outside this phase.
+No API key or paid service is required for the historical dashboard.
+
+## Optional Jev assessment
+
+`jev-config.js` exposes only `window.JEV_CONFIG.endpoint`, empty by default. Set this to a deployed public HTTPS `/api/jev-decision` URL to enable the optional button after a completed comparison. Requests occur only when a visitor presses **Request Jev assessment**. Disabled, throttled, malformed, or failed responses leave the historical dashboard usable. HTTPS is required even during development; no relative or HTTP endpoint is accepted.
+
+The browser sends only the selected objective and four metrics for each real strategy replay: prize-rate percentage, break-even percentage, net return, and evaluated draw count. No tickets, dates, or history rows are sent. Rates with no denominator are sent as zero and unknown net return remains null, so missing payout records limit the evidence. Assessment confidence, evidence quality, and evidence assessment compare supplied historical/mathematical metrics; they do not predict future draws or establish future performance.
+
+Deploy the server proxy separately on Vercel. Server settings are `JEV_ENABLED=true`, `TYPESAFE_API_KEY` (encrypted server environment only), and `JEV_ALLOWED_ORIGIN` (the exact frontend origin). Keep the server disabled until deployment validation is complete. Never put credentials in browser files or the public endpoint configuration. The proxy accepts only bounded metrics, allows configured-origin CORS, and returns sanitized unavailable errors. Its five-attempts-per-minute IP limiter is **per warm instance**, not a global quota: a shared durable limiter is required before paid use at scale. It does not retry provider calls. Production routing and safe disabled-endpoint validation belong to the deployment setup.
+
+Static publication must include both `jev-config.js` and `jev-client.js` alongside `script.js`. The Pages publication allowlist is updated in the deployment task before enabling this integration.

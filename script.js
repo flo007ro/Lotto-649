@@ -31,6 +31,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelBacktest = document.getElementById('cancelBacktestButton');
     const prizeProgress = document.getElementById('prizeProgress');
     const progressMeter = document.getElementById('backtestProgress');
+    const jevButton = document.getElementById('requestJevDecisionButton');
+    const jevStatus = document.getElementById('jevStatus');
+    const jevResult = document.getElementById('jevDecisionResult');
+    let jevRequest = null, jevRevision = 0;
+    const jevEndpoint = () => globalThis.JEV_CONFIG?.endpoint || '';
+    const jevConfigured = () => globalThis.JevClient?.isEndpointConfigured(jevEndpoint());
+    function resetJev() {
+        jevRevision++;
+        jevRequest = null;
+        jevButton.disabled = true;
+        jevResult.innerHTML = '';
+        jevStatus.textContent = jevConfigured() ? 'Complete a full-history comparison before requesting an assessment.'
+            : 'Not configured. Set a public HTTPS endpoint in jev-config.js to enable optional assessments. The historical dashboard works without Jev.';
+    }
+    function prepareJev(summary) {
+        resetJev();
+        try {
+            jevRequest = globalThis.JevClient?.buildRequest(summary.strategy.strategy, summary.candidates) || null;
+            jevButton.disabled = !jevConfigured() || !jevRequest;
+            if (jevConfigured() && jevRequest) jevStatus.textContent = 'Historical comparison ready. Press the button to send only the supplied summary metrics for an optional assessment.';
+        } catch { jevStatus.textContent = 'Jev assessment unavailable: comparison metrics are incomplete. Historical results remain available.'; }
+    }
+    jevButton.addEventListener('click', async () => {
+        if (!jevRequest || !jevConfigured() || jevButton.disabled) return;
+        const revision = jevRevision;
+        jevButton.disabled = true;
+        jevResult.innerHTML = '';
+        jevStatus.textContent = 'Requesting assessment of supplied historical metrics…';
+        const decision = await globalThis.JevClient.requestDecision(jevEndpoint(), jevRequest);
+        if (revision !== jevRevision) return;
+        jevButton.disabled = false;
+        if (decision.available === false) { jevStatus.textContent = decision.message; return; }
+        jevStatus.textContent = 'Assessment complete. These values describe support for comparing the supplied historical metrics.';
+        jevResult.innerHTML = prizeMetrics([
+            ['Assessed strategy', prizeEscape(prizeStrategyName(decision.mode))],
+            ['Assessment confidence (0–1)', decision.confidence], ['Evidence quality score (0–2)', decision.score],
+            ['Evidence assessment (0–1)', decision.assessment], ['Model', prizeEscape(decision.model)],
+            ['Input tokens', decision.usage.input_tokens ?? 'Unavailable'], ['Output tokens', decision.usage.output_tokens ?? 'Unavailable']
+        ]);
+    });
+    resetJev();
 
     function finishPrizeWork() {
         if (prizeWorker) prizeWorker.terminate();
@@ -42,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('refreshDataButton').disabled = false;
     }
     function invalidatePrizeGroup() {
+        resetJev();
         finishPrizeWork();
         prizeGroup = null;
         backtestButton.disabled = true;
@@ -58,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     function startPrizeWork(type, payload) {
+        resetJev();
         finishPrizeWork();
         prizeGenerate.disabled = backtestButton.disabled = true;
         cancelBacktest.hidden = false;
@@ -80,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     finishPrizeWork();
                 } else if (data.type === 'result') {
                     renderBacktestDashboard(data.payload);
+                    prepareJev(data.payload);
                     prizeProgress.textContent = 'Full-history comparison complete. Financial fields use complete payout records only.';
                     finishPrizeWork();
                 } else if (data.type === 'error') {
@@ -444,6 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await loadPublishedData();
             document.getElementById('backtestDashboard').innerHTML = '';
+            resetJev();
             showNotification('Published snapshots reloaded. This does not check the official website.', 'success');
         } catch (error) {
             document.getElementById('dataStatus').textContent = 'Reload failed. Previous local history is retained; published status could not be verified.';

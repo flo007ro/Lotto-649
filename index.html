@@ -71,6 +71,14 @@
     <progress id="backtestProgress" max="100" value="0" hidden aria-label="Backtest progress"></progress>
     <div id="prizeResults" aria-live="polite"></div>
     <div id="backtestDashboard"></div>
+    <section id="jevDecisionCard" class="jev-decision-card" aria-labelledby="jevTitle">
+      <h3 id="jevTitle">Optional Jev strategy assessment</h3>
+      <p>Compares supplied historical/mathematical metrics for Frequent Wins, Return analysis, and Balanced. Assessment confidence and evidence assessment describe support for this comparison; they do not predict future draws or establish future performance.</p>
+      <p>Only four summary metrics per strategy are sent when you press the button. Missing payout rates are sent as zero with unknown net return; this limits the evidence.</p>
+      <button id="requestJevDecisionButton" type="button" disabled>Request Jev assessment</button>
+      <p id="jevStatus" role="status" aria-live="polite">Not configured. Set a public HTTPS endpoint in jev-config.js to enable optional assessments. The historical dashboard works without Jev.</p>
+      <div id="jevDecisionResult"></div>
+    </section>
   </section>
 
   <div class="container">
@@ -212,6 +220,8 @@
   <script src="prize-optimizer.js"></script>
   <script src="advanced_ml_model.js"></script> 
   <script src="optimizer.js"></script>
+  <script src="jev-config.js"></script>
+  <script src="jev-client.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
