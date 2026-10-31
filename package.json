@@ -4,6 +4,7 @@
   "main": "advanced_ml_model.js",
   "scripts": {
     "test": "node --test",
+    "update:data": "node scripts/update-official-results.js",
     "start": "node server.js"
   },
   "keywords": [],
