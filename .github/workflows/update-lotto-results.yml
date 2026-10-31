@@ -50,7 +50,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/lotto-pages"
           cp -- index.html style.css script.js optimizer.js advanced_ml_model.js \
             generation.worker.js backtest.worker.js prize-engine.js prize-optimizer.js \
-            backtester.js historical_data.json data-status.json "$RUNNER_TEMP/lotto-pages/"
+            backtester.js jev-config.js jev-client.js historical_data.json data-status.json "$RUNNER_TEMP/lotto-pages/"
       - name: Upload validated GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
