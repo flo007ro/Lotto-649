@@ -5,6 +5,8 @@ const BODY_LIMIT = 8192;
 const WINDOW_MS = 60000;
 const REQUEST_LIMIT = 5;
 const PROVIDER = 'https://api.typesafe.ai/v1';
+// Allow small provider serialization differences without accepting conflicting answers.
+const ANSWER_TOLERANCE = 0.0001;
 
 function object(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -83,6 +85,10 @@ function parseSystemOneResponse(payload) {
         || !object(quality) || quality.type !== 'score' || !bounded(quality.score, 0, 2)
         || !bounded(quality.confidence, 0, 1) || !distribution(quality.probabilities, ['0', '1', '2'])
         || !object(evidence) || evidence.type !== 'noul' || !bounded(evidence.noul, 0, 1)) throw providerInvalid();
+    const highestProbability = Math.max(...MODES.map(mode => strategy.probabilities[mode]));
+    const expectedScore = quality.probabilities['1'] + 2 * quality.probabilities['2'];
+    if (highestProbability - strategy.probabilities[strategy.choice] > ANSWER_TOLERANCE
+        || Math.abs(quality.score - expectedScore) > ANSWER_TOLERANCE) throw providerInvalid();
     if (payload.usage !== undefined && payload.usage !== null && !object(payload.usage)) throw providerInvalid();
     const usage = {};
     for (const name of ['input_tokens', 'output_tokens']) {
@@ -100,6 +106,7 @@ async function readBody(req) {
         const error = new Error('Body too large.'); error.code = 'BODY_TOO_LARGE'; throw error;
     }
     let body = req.body;
+    const alreadyParsed = object(body);
     if (body === undefined && req[Symbol.asyncIterator]) {
         const chunks = []; let bytes = 0;
         for await (const chunk of req) {
@@ -117,6 +124,11 @@ async function readBody(req) {
     }
     // Validate before serializing to exclude accessors, toJSON, cycles and untrusted nested content.
     const normalized = validateDecisionRequest(body);
+    // Parsed JSON has lost whitespace and its original byte count. Trust a bounded
+    // HTTP Content-Length only; chunked or lengthless parsed bodies fail closed.
+    if (alreadyParsed && (length === undefined || req.headers?.['transfer-encoding'] !== undefined)) {
+        const error = new Error('Original body size is unknown.'); error.code = 'BODY_TOO_LARGE'; throw error;
+    }
     if (Buffer.byteLength(JSON.stringify(normalized)) > BODY_LIMIT) {
         const error = new Error('Body too large.'); error.code = 'BODY_TOO_LARGE'; throw error;
     }

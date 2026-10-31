@@ -21,7 +21,7 @@ function response() {
 }
 async function invoke(handler, overrides = {}) {
     const res = response();
-    await handler({ method: 'POST', headers: { origin: env.JEV_ALLOWED_ORIGIN }, body: input(), socket: { remoteAddress: '127.0.0.1' }, ...overrides }, res);
+    await handler({ method: 'POST', headers: { origin: env.JEV_ALLOWED_ORIGIN }, body: JSON.stringify(input()), socket: { remoteAddress: '127.0.0.1' }, ...overrides }, res);
     return res;
 }
 function provider(models = [{ name: 'other' }, { name: 'jev-latest' }], payload = answer()) {
@@ -86,6 +86,54 @@ test('parser rejects wrong types, missing fields and out-of-range answers', () =
         v => { delete v.answers.quality; }, v => { v.model = {}; }]) {
         const payload = answer(); change(payload); assert.throws(() => parseSystemOneResponse(payload), /provider/i);
     }
+});
+
+test('parser rejects a choice below the highest probability', () => {
+    const payload = answer();
+    payload.answers.strategy.choice = 'frequent';
+    payload.answers.strategy.probabilities = { frequent: 0, return: 1, balanced: 0 };
+    assert.throws(() => parseSystemOneResponse(payload), { code: 'PROVIDER_INVALID_RESPONSE' });
+});
+
+test('parser rejects a score inconsistent with the probability-weighted levels', () => {
+    const payload = answer();
+    payload.answers.quality.score = 2;
+    payload.answers.quality.probabilities = { 0: 1, 1: 0, 2: 0 };
+    assert.throws(() => parseSystemOneResponse(payload), { code: 'PROVIDER_INVALID_RESPONSE' });
+});
+
+test('parser allows tied maximum choices and small numeric rounding differences', () => {
+    const payload = answer();
+    payload.answers.strategy.probabilities = { frequent: 0.5, return: 0, balanced: 0.5 };
+    payload.answers.quality.score = 1.500001;
+    assert.equal(parseSystemOneResponse(payload).mode, 'balanced');
+    assert.equal(parseSystemOneResponse(payload).score, 1.500001);
+    payload.answers.strategy.probabilities = { frequent: 0.500001, return: 0, balanced: 0.499999 };
+    assert.equal(parseSystemOneResponse(payload).mode, 'balanced');
+    payload.answers.strategy.probabilities = { frequent: 0.51, return: 0, balanced: 0.49 };
+    assert.throws(() => parseSystemOneResponse(payload), { code: 'PROVIDER_INVALID_RESPONSE' });
+    payload.answers.strategy.probabilities = { frequent: 0.5, return: 0, balanced: 0.5 };
+    payload.answers.quality.score = 1.52;
+    assert.throws(() => parseSystemOneResponse(payload), { code: 'PROVIDER_INVALID_RESPONSE' });
+});
+
+test('parsed JSON without a known original byte count fails closed before fetch', async () => {
+    const original = `${' '.repeat(9000)}${JSON.stringify(input())}`;
+    const stub = provider();
+    const result = await invoke(createJevHandler({ env, fetch: stub.fetch }), { body: JSON.parse(original) });
+    assert.equal(result.statusCode, 413);
+    assert.equal(result.body.error.code, 'BODY_TOO_LARGE');
+    assert.equal(stub.calls.length, 0);
+});
+
+test('parsed Vercel JSON with safe original Content-Length is accepted', async () => {
+    const original = JSON.stringify(input());
+    const stub = provider();
+    const result = await invoke(createJevHandler({ env, fetch: stub.fetch }), {
+        body: JSON.parse(original), headers: { origin: env.JEV_ALLOWED_ORIGIN, 'content-length': String(Buffer.byteLength(original)) }
+    });
+    assert.equal(result.statusCode, 200);
+    assert.equal(result.body.mode, 'balanced');
 });
 
 test('disabled, missing key, origin, method and invalid body are rejected before fetch', async () => {
