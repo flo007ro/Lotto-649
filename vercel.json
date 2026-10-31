@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "builds": [
+    { "src": "api/jev-decision.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "style.css", "use": "@vercel/static" },
+    { "src": "script.js", "use": "@vercel/static" },
+    { "src": "jev-client.js", "use": "@vercel/static" },
+    { "src": "jev-config.js", "use": "@vercel/static" },
+    { "src": "*.worker.js", "use": "@vercel/static" },
+    { "src": "advanced_ml_model.js", "use": "@vercel/static" },
+    { "src": "backtester.js", "use": "@vercel/static" },
+    { "src": "optimizer.js", "use": "@vercel/static" },
+    { "src": "prize-engine.js", "use": "@vercel/static" },
+    { "src": "prize-optimizer.js", "use": "@vercel/static" },
+    { "src": "historical_data.json", "use": "@vercel/static" },
+    { "src": "data-status.json", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/jev-decision", "dest": "/api/jev-decision.js" },
+    { "src": "/", "dest": "/index.html" },
+    { "handle": "filesystem" },
+    { "src": "/.*", "status": 404 }
+  ]
+}
