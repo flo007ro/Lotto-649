@@ -1,10 +1,6 @@
 // script.js - FINAL STABLE AND CLEAN VERSION
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DYNAMIC API ENDPOINT ---
-    const IS_LOCAL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const API_BASE_URL = IS_LOCAL ? 'http://localhost:3000' : 'https://lotto-649-quebec.onrender.com';
-
     // --- State Variables and Chart Instances ---
     let historicalData = [], stats = {}, currentGeneratedComboObject = null;
     let savedCombinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
@@ -27,6 +23,90 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadModelButton = document.getElementById('downloadModelButton');
     const uploadModelInput = document.getElementById('uploadModelInput');
 
+    let prizeWorker = null, prizeGroup = null, prizeOptions = null;
+    const prizeBudget = document.getElementById('prizeBudget');
+    const prizeSeed = document.getElementById('prizeSeed');
+    const prizeGenerate = document.getElementById('generatePrizeTicketsButton');
+    const backtestButton = document.getElementById('runBacktestButton');
+    const cancelBacktest = document.getElementById('cancelBacktestButton');
+    const prizeProgress = document.getElementById('prizeProgress');
+    const progressMeter = document.getElementById('backtestProgress');
+
+    function finishPrizeWork() {
+        if (prizeWorker) prizeWorker.terminate();
+        prizeWorker = null;
+        prizeGenerate.disabled = false;
+        backtestButton.disabled = !prizeGroup;
+        cancelBacktest.hidden = true;
+        progressMeter.hidden = true;
+        document.getElementById('refreshDataButton').disabled = false;
+    }
+    function invalidatePrizeGroup() {
+        finishPrizeWork();
+        prizeGroup = null;
+        backtestButton.disabled = true;
+        document.getElementById('prizeResults').innerHTML = '';
+        document.getElementById('backtestDashboard').innerHTML = '';
+        try {
+            document.getElementById('prizeTicketCount').textContent = PrizeOptimizer.ticketCountFromBudget(Number(prizeBudget.value));
+            prizeBudget.setCustomValidity('');
+            prizeProgress.textContent = 'Generate a group with these settings.';
+        } catch (error) {
+            document.getElementById('prizeTicketCount').textContent = '—';
+            prizeBudget.setCustomValidity(error.message);
+            prizeProgress.textContent = error.message;
+        }
+    }
+    function startPrizeWork(type, payload) {
+        finishPrizeWork();
+        prizeGenerate.disabled = backtestButton.disabled = true;
+        cancelBacktest.hidden = false;
+        document.getElementById('refreshDataButton').disabled = true;
+        prizeProgress.textContent = type === 'generate' ? 'Searching ticket-group coverage…' : 'Starting full-history replay after 100 warmup draws…';
+        document.getElementById('backtestDashboard').innerHTML = '';
+        try {
+            const worker = prizeWorker = new Worker('backtest.worker.js');
+            prizeWorker.onmessage = ({ data }) => {
+                if (prizeWorker !== worker) return;
+                if (data.type === 'progress') {
+                    const { phase, completed, total } = data.payload;
+                    progressMeter.hidden = false;
+                    progressMeter.value = total ? completed / total * 100 : 0;
+                    prizeProgress.textContent = `${phase}: ${completed.toLocaleString()} / ${total.toLocaleString()} draw evaluations. The page remains usable.`;
+                } else if (data.type === 'tickets') {
+                    prizeGroup = data.payload;
+                    renderPrizeOptimization(prizeGroup);
+                    prizeProgress.textContent = 'Ticket group ready. Run the comparison to evaluate the strategy across all eligible history.';
+                    finishPrizeWork();
+                } else if (data.type === 'result') {
+                    renderBacktestDashboard(data.payload);
+                    prizeProgress.textContent = 'Full-history comparison complete. Financial fields use complete payout records only.';
+                    finishPrizeWork();
+                } else if (data.type === 'error') {
+                    prizeProgress.textContent = `Calculation failed: ${data.payload.message}`;
+                    finishPrizeWork();
+                }
+            };
+            prizeWorker.onerror = () => { if (prizeWorker !== worker) return; prizeProgress.textContent = 'Worker failed to load or calculate. Retry on an HTTP server.'; finishPrizeWork(); };
+            prizeWorker.postMessage({ type, payload });
+        } catch (error) { prizeProgress.textContent = error.message; finishPrizeWork(); }
+    }
+    prizeBudget.addEventListener('input', invalidatePrizeGroup);
+    prizeSeed.addEventListener('input', invalidatePrizeGroup);
+    document.querySelectorAll('[name="prizeStrategy"]').forEach(radio => radio.addEventListener('change', invalidatePrizeGroup));
+    prizeGenerate.addEventListener('click', () => {
+        if (!prizeBudget.reportValidity() || !prizeSeed.reportValidity()) return;
+        const seed = Number(prizeSeed.value);
+        if (!Number.isSafeInteger(seed)) { prizeProgress.textContent = 'Seed must be a safe integer.'; return; }
+        prizeOptions = { strategy: document.querySelector('[name="prizeStrategy"]:checked').value, budget: Number(prizeBudget.value), seed };
+        startPrizeWork('generate', prizeOptions);
+    });
+    backtestButton.addEventListener('click', () => {
+        if (!historicalData.length) { prizeProgress.textContent = 'Load published history using refresh before running the comparison.'; return; }
+        startPrizeWork('backtest', { ...prizeOptions, draws: historicalData, tickets: prizeGroup.tickets });
+    });
+    cancelBacktest.addEventListener('click', () => { finishPrizeWork(); prizeProgress.textContent = 'Calculation cancelled. No partial result is shown.'; });
+
     // --- Initialization ---
     async function initializeApp() {
         if (localStorage.getItem('theme') === 'dark') {
@@ -35,17 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateModelStatus(false, 'No Model Loaded');
         try {
-            const response = await fetch(`${API_BASE_URL}/api/results`);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            historicalData = await response.json();
-            historicalData.reverse(); 
-            historicalDrawsCountEl.textContent = historicalData.length;
-            stats = Optimizer.analyze(historicalData);
-            displayStatistics();
+            await loadPublishedData();
             displaySavedCombinations();
         } catch (error) {
-            console.error("Error connecting to backend:", error);
-            showNotification('Could not connect to the backend server. Is it running?', 'error');
+            renderDataStatus({ state: "unavailable", message: "Published history/status could not be loaded. Retry refresh." });
+            console.error("Error loading published snapshots:", error);
+            showNotification('Could not load published history/status. Serve this page over HTTP and retry refresh.', 'error');
         }
     }
 
@@ -166,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (options.useML) {
             if (ML_Model.model) {
                 mlPredictions = await ML_Model.predict(historicalData);
-                showNotification('Using ML model for predictions.', 'info');
+                showNotification('Using descriptive ML model output; this does not predict draws.', 'info');
             } else {
                 showNotification('ML model not loaded. Ignoring ML option.', 'warning');
             }
@@ -176,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function trainMLModel() {
         if (!useMLCheckbox.checked) {
-            showNotification('"Use ML Predictions" must be enabled to train the model.', 'warning');
+            showNotification('"Use ML Model Output" must be enabled to train the model.', 'warning');
             return;
         }
         showProgressBar('trainingProgress', true);
@@ -346,31 +421,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function refreshData() {
-        showNotification('Fetching latest data from server...', 'info');
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/results`);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
-            const newData = await response.json();
-            newData.reverse();
-            
-            if (newData.length > historicalData.length) {
-                showNotification(`Success! ${newData.length - historicalData.length} new draw(s) added.`, 'success');
-            } else {
-                showNotification('Data is already up-to-date.', 'success');
-            }
+    async function loadPublishedData() {
+        const [historyResponse, statusResponse] = await Promise.all([
+            fetch('historical_data.json', { cache: 'no-store' }),
+            fetch('data-status.json', { cache: 'no-store' })
+        ]);
+        if (!historyResponse.ok || !statusResponse.ok) throw new Error('Published snapshot unavailable');
+        const [draws, status] = await Promise.all([historyResponse.json(), statusResponse.json()]);
+        if (!Array.isArray(draws) || !draws.length || draws.some(draw => !PrizeEngine.normalizeDraw(draw))) throw new Error('Invalid published history');
+        if (!status || typeof status !== 'object' || Array.isArray(status)) throw new Error('Invalid published status');
+        historicalData = draws.slice().sort((a, b) => a.date.localeCompare(b.date));
+        historicalDrawsCountEl.textContent = historicalData.length;
+        stats = Optimizer.analyze(historicalData);
+        renderDataStatus(status);
+        displayStatistics();
+    }
 
-            historicalData = newData;
-            historicalDrawsCountEl.textContent = historicalData.length;
-            stats = Optimizer.analyze(historicalData);
-            
-            displayStatistics();
-            
+    async function refreshData() {
+        const button = document.getElementById('refreshDataButton');
+        button.disabled = true;
+        showNotification('Reloading published history and import status…', 'info');
+        try {
+            await loadPublishedData();
+            document.getElementById('backtestDashboard').innerHTML = '';
+            showNotification('Published snapshots reloaded. This does not check the official website.', 'success');
         } catch (error) {
-            console.error("Error refreshing data:", error);
-            showNotification('Could not connect to the backend server.', 'error');
-        }
+            document.getElementById('dataStatus').textContent = 'Reload failed. Previous local history is retained; published status could not be verified.';
+            showNotification('Could not reload published snapshots. Please retry.', 'error');
+        } finally { button.disabled = false; }
     }
 
     // --- Display Functions ---
@@ -403,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="item">
                 <div class="numbers-wrapper">${numbersHtml}</div>
                 ${resultHtml}
-                <span class="saved-confidence">${combo.confidence ? `Conf: ${combo.confidence.toFixed(1)}%` : ''}</span>
+                <span class="saved-confidence">${combo.confidence ? `Score: ${combo.confidence.toFixed(1)} / 100` : ''}</span>
                 <span>${new Date(combo.date).toLocaleDateString()}</span>
                 <button class="delete-btn" data-index="${index}" title="Delete Combination">&times;</button>
             </div>`;
@@ -418,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('generatedNumbers').innerHTML = createNumberDivs(combo.numbers, 'number', matches, bonusMatchNumber);
         document.getElementById('combinationStats').textContent = `Sum: ${combo.sum}, Odd/Even: ${combo.oddEven}, High/Low: ${combo.highLow}`;
         document.getElementById('confidenceLevel').style.width = `${combo.confidence}%`;
-        document.getElementById('confidenceScore').textContent = `${combo.confidence.toFixed(2)}%`;
+        document.getElementById('confidenceScore').textContent = `${combo.confidence.toFixed(2)} / 100`;
         if (matches.length === 0 && !bonusMatchNumber) {
             document.getElementById('singleDrawInfo').textContent = '';
         }
@@ -435,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
             <div class="multiple-result-item">
               <div class="numbers-wrapper">${createNumberDivs(combo.numbers)}</div>
-              <span class="stats-text"><b>Confidence: ${combo.confidence.toFixed(2)}%</b> | Sum: ${combo.sum} | O/E: ${combo.oddEven} | H/L: ${combo.highLow}</span>
+              <span class="stats-text"><b>Model / heuristic score: ${combo.confidence.toFixed(2)} / 100</b> | Sum: ${combo.sum} | O/E: ${combo.oddEven} | H/L: ${combo.highLow}</span>
               <button class="save-multiple-btn" data-combination='${JSON.stringify(combo)}' ${isSaved ? 'disabled' : ''}>${isSaved ? 'Saved!' : 'Save Set'}</button>
             </div>`;
         }).join('');
@@ -454,6 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CHART RENDERING FUNCTIONS ---
     function renderAllCharts() {
+        if (typeof Chart === 'undefined' || !historicalData.length) return;
         const activeTab = document.querySelector('.tab-button.active')?.dataset.tab;
         if (activeTab === 'frequency-analysis') renderFrequencyChart();
         if (activeTab === 'pattern-analysis') {
@@ -656,3 +735,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeApp();
 });
+// Rendering is separate from calculation so missing payouts cannot become zero returns.
+function prizeEscape(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+}
+function prizeMoney(value) {
+    return value == null ? 'Unavailable — incomplete payout history' : new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(value);
+}
+function prizeRate(value) {
+    return value.percentage == null ? 'Unavailable — no eligible denominator' : `${value.percentage.toFixed(2)}% (${value.numerator.toLocaleString()} / ${value.denominator.toLocaleString()})`;
+}
+function prizeMetrics(entries) {
+    return `<dl class="prize-metrics">${entries.map(([label, value]) => `<div><dt>${prizeEscape(label)}</dt><dd>${prizeEscape(value)}</dd></div>`).join('')}</dl>`;
+}
+function prizeStrategyName(strategy) {
+    return { frequent: 'Frequent Wins', return: 'Return analysis (Maximum Return)', balanced: 'Balanced', 'quick-pick': 'Quick Pick' }[strategy] || strategy;
+}
+function renderPrizeOptimization(result) {
+    const c = result.coverage;
+    document.getElementById('prizeResults').innerHTML = `<h3>${prizeEscape(prizeStrategyName(result.strategy))} ticket group</h3>
+        <h4>Coverage of this generated group</h4>${prizeMetrics([
+            ['Tickets', result.ticketCount], ['Group spending', prizeMoney(result.ticketCount * 3)],
+            ['Unique numbers', c.uniqueNumbers], ['Unique pairs', `${c.uniquePairs} / ${c.totalPairs}`],
+            ['Duplicate pairs', c.duplicatePairs], ['Unique triplets', `${c.uniqueTriplets} / ${c.totalTriplets}`], ['Duplicate triplets', c.duplicateTriplets]
+        ])}<details open><summary>Generated tickets (${result.ticketCount})</summary><ol class="prize-ticket-list">${result.tickets.map(ticket => `<li>${ticket.map(number => `<span>${number}</span>`).join(' ')}</li>`).join('')}</ol></details>`;
+}
+function renderBacktestDashboard(summary) {
+    const { strategy, baseline, simulation } = summary;
+    const metrics = result => [
+        ['Spending (complete records)', prizeMoney(result.spending)], ['Gross return', prizeMoney(result.grossReturn)],
+        ['Net return', prizeMoney(result.netReturn)], ['Free Plays (all evaluated tickets)', result.freePlays],
+        ['Prize rate (all tickets)', prizeRate(result.prizeRate)], ['$10+ cash rate (complete-record tickets)', prizeRate(result.cashWin10PlusRate)],
+        ['Break-even rate (complete draws)', prizeRate(result.breakEvenRate)],
+        ['Outcome distribution (loss / exact break-even / profit)', result.outcomeDistribution.denominator ?
+            `${result.outcomeDistribution.loss} / ${result.outcomeDistribution.breakEven} / ${result.outcomeDistribution.profit} of ${result.outcomeDistribution.denominator} complete draws` : 'Unavailable — no complete payout records']
+    ];
+    document.getElementById('backtestDashboard').innerHTML = `<h3>Historical strategy comparison</h3>
+        <p>New tickets are generated before every evaluated draw; this is a replay of the strategy, not a test of the fixed group above. Quick Pick uses the same budget, seed schedule, and dates without coverage search. Results describe past outcomes and do not predict future draws.</p>
+        ${prizeMetrics([
+            ['Evaluated date range', strategy.dateRange.start ? `${strategy.dateRange.start} to ${strategy.dateRange.end}` : 'No eligible draws'],
+            ['Seed', strategy.seed], ['Budget per draw', prizeMoney(strategy.budget)], ['Tickets per draw', strategy.ticketsPerDraw],
+            ['Evaluated draws', strategy.evaluatedDrawCount], ['Complete financial draws', strategy.financialDrawCount],
+            ['Warmup draws excluded', strategy.excludedWarmupDrawCount], ['Invalid draws excluded', strategy.invalidDrawCount],
+            ['Incomplete payouts excluded from financial metrics', strategy.incompletePayoutDrawCount]
+        ])}
+        <p class="prize-notice">${strategy.incompletePayoutDrawCount ? 'Incomplete payout history: dollar totals and cash/break-even rates exclude these draws. When no complete records exist, financial results are unavailable, not zero.' : 'All evaluated records have complete payouts.'} Free Plays count as $3 in complete-record returns. Gold Ball is excluded. Prize rate counts any Classic prize, including Free Plays.</p>
+        <div class="prize-comparison"><section><h4>${prizeEscape(prizeStrategyName(strategy.strategy))}</h4>${prizeMetrics(metrics(strategy))}</section>
+        <section><h4>Equal-budget Quick Pick baseline</h4>${prizeMetrics(metrics(baseline))}</section></div>
+        <h4>Fair-draw simulation of the generated group</h4>${simulation ? `<p>10,000 independent fair draws, seed ${prizeEscape(simulation.seed)}. Uses the recorded payout table from ${prizeEscape(simulation.scenarioDate)} as a fixed scenario, not a forecast or historical payout replacement.</p>${prizeMetrics(metrics(simulation))}` : '<p>Unavailable — no complete recorded payout table is available for a disclosed financial scenario.</p>'}`;
+}
+function renderDataStatus(status) {
+    const timestamp = value => value ? String(value) : 'Not published';
+    const checkedTime = Date.parse(status.lastSuccessAt);
+    const stale = !Number.isFinite(checkedTime) || Date.now() - checkedTime > 4 * 86400000;
+    document.getElementById('dataStatus').innerHTML = `<strong>Published data · Loto-Québec official source</strong>
+        <p>${prizeEscape(status.state || 'Unknown')} · ${stale ? 'Stale / not recently verified' : 'Recently verified publication'} (stale after 4 days without a successful check).</p>
+        ${prizeMetrics([['Latest published draw', timestamp(status.latestDrawDate)], ['Last published check', timestamp(status.lastAttemptAt)],
+            ['Last successful check', timestamp(status.lastSuccessAt)], ['Last imported draw timestamp', timestamp(status.lastImportedAt)]])}
+        <p>${prizeEscape(status.message)}</p><p>Refresh reloads published files only. Failed publisher runs retain the last verified snapshot and timestamps. See the publishing workflow for failure diagnostics.</p>
+        <a href="https://loteries.lotoquebec.com/en/lotteries/lotto-6-49-resultats" target="_blank" rel="noopener noreferrer">Official Lotto 6/49 results</a>`;
+}

@@ -137,3 +137,29 @@ label.button { display: inline-block; padding: 12px 20px; cursor: pointer; borde
   .prize-strategy-explanation { min-height: 0; }
   .prize-optimization .button-group button { width: 100%; }
 }
+
+/* Coverage and financial comparison retain independent, labelled fields. */
+.prize-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
+.prize-metrics > div { min-width: 0; padding: 12px; background: var(--background-color); border: 1px solid var(--border-color); border-radius: 8px; overflow-wrap: anywhere; }
+.prize-metrics dt { font-size: .85rem; }
+.prize-metrics dd { margin: 6px 0 0; font-weight: 650; }
+.prize-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.prize-comparison > section { min-width: 0; }
+.prize-ticket-list { padding-left: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px 28px; }
+.prize-ticket-list li { padding: 6px; }
+.prize-ticket-list span { display: inline-block; min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; background: var(--background-color); border-radius: 4px; }
+#backtestProgress { width: 100%; accent-color: var(--primary-color); }
+#prizeProgress { overflow-wrap: anywhere; }
+#dataStatus a { color: var(--primary-color); }
+button:disabled { opacity: .55; cursor: not-allowed; }
+[hidden] { display: none !important; }
+@media (max-width: 700px) {
+  .container { box-sizing: border-box; max-width: calc(100% - 2rem); margin: 1rem; padding: 1.25rem; }
+  .prize-comparison, .prize-metrics { grid-template-columns: minmax(0, 1fr); }
+  .prize-ticket-list { grid-template-columns: minmax(0, 1fr); }
+  .tab-buttons { flex-wrap: wrap; }
+  .chart-grid, .custom-strategy-container { grid-template-columns: minmax(0, 1fr); }
+  header { padding-top: 4rem; }
+  header h1 { font-size: 1.8rem; }
+  .data-source-info { flex-wrap: wrap; gap: 5px; }
+}

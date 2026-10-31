@@ -54,9 +54,9 @@ const ML_Model = {
     },
 
     async predict(historicalData) {
-        console.log('[ML] Attempting to generate LSTM predictions...');
+        console.log('[ML] Attempting to generate descriptive LSTM output...');
         if (!this.model) {
-            console.warn('[ML] Prediction requested, but no model is loaded.');
+            console.warn('[ML] Model output requested, but no model is loaded.');
             return null;
         }
         
@@ -73,7 +73,7 @@ const ML_Model = {
         const prediction = this.model.predict(input);
         const predictionData = await prediction.data();
         
-        console.log('[ML] LSTM Prediction generated successfully.');
+        console.log('[ML] Descriptive LSTM output generated; not a forecast.');
         tf.dispose([input, prediction]);
         return predictionData;
     }

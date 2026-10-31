@@ -1,3 +1,5 @@
+// Legacy confidence / mlPredictions payload keys are retained for saved-set compatibility.
+// Scores describe heuristic fit and model output, never winning probabilities.
 // generation.worker.js - FINAL STABLE VERSION WITH MONTE CARLO SIMULATION
 
 console.log("[Worker] Generation worker script loaded successfully.");

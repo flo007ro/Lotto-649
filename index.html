@@ -18,7 +18,7 @@
         <span class="theme-label">Dark Mode</span>
     </div>
     <h1>Ultimate Lotto 6/49 Quebec Optimizer</h1>
-    <p>Advanced statistical analysis and machine learning for optimized number selection</p>
+    <p>Ticket-group coverage, historical comparisons, and descriptive statistics</p>
   </header>
   
   <section class="container prize-optimization" id="prizeOptimization" aria-labelledby="prizeOptimizationTitle">
@@ -32,7 +32,7 @@
       </label>
       <label class="prize-strategy-card" for="prizeReturn">
         <input type="radio" id="prizeReturn" name="prizeStrategy" value="return">
-        <span class="prize-card-content"><strong>Maximum Return</strong><span>Explore return distributions with simulation and backtesting. Ticket search prioritizes triplet coverage as a proxy, not profit.</span></span>
+        <span class="prize-card-content"><strong>Return analysis <small>Maximum Return</small></strong><span>Explore return distributions with simulation and backtesting. Ticket search prioritizes triplet coverage as a proxy, not profit.</span></span>
       </label>
       <label class="prize-strategy-card" for="prizeBalanced">
         <input type="radio" id="prizeBalanced" name="prizeStrategy" value="balanced" checked>
@@ -41,7 +41,7 @@
     </fieldset>
     <p id="prizeStrategyExplanation" class="prize-strategy-explanation" aria-live="polite">
       <span data-prize-explanation="frequent">Frequent Wins accepts a candidate only when neither repeated pair nor repeated triplet coverage increases.</span>
-      <span data-prize-explanation="return">Maximum Return searches for fewer repeated triplets, then fewer repeated pairs. Financial comparison requires separate simulation or backtesting.</span>
+      <span data-prize-explanation="return">Return analysis searches for fewer repeated triplets, then fewer repeated pairs. Financial comparison requires separate simulation or backtesting.</span>
       <span data-prize-explanation="balanced">Balanced minimizes an equally weighted combination of repeated pair and triplet coverage fractions.</span>
     </p>
     <div class="prize-budget-controls">
@@ -61,17 +61,27 @@
       <summary>How coverage is measured</summary>
       <p>Each ticket contains 15 pairs and 20 triplets. Repeated coverage is the total occurrences minus the distinct subsets across the group. The seeded search compares 64 candidate groups with an initial random group by default. These counts are separate from win rates and dollar returns.</p>
     </details>
-    <div class="button-group"><button id="generatePrizeTicketsButton" type="button">Generate Prize Ticket Group</button></div>
+    <div class="prize-budget-field"><label for="prizeSeed">Reproducible seed</label><input id="prizeSeed" type="number" value="1" step="1" required></div>
+    <div class="button-group">
+      <button id="generatePrizeTicketsButton" type="button">Generate Prize Ticket Group</button>
+      <button id="runBacktestButton" type="button" disabled>Run full-history comparison</button>
+      <button id="cancelBacktestButton" type="button" hidden>Cancel calculation</button>
+    </div>
+    <p id="prizeProgress" role="status" aria-live="polite">Generate a group to compare the selected strategy with Quick Pick.</p>
+    <progress id="backtestProgress" max="100" value="0" hidden aria-label="Backtest progress"></progress>
+    <div id="prizeResults" aria-live="polite"></div>
+    <div id="backtestDashboard"></div>
   </section>
 
   <div class="container">
     <h2>Number Generator</h2>
+    <p class="prize-notice">This model does not predict future draws. Model / heuristic scores describe the generator's preferences, not winning probabilities. Historical patterns do not increase expected profit in a fair draw.</p>
     <div class="options">
       <div class="option-item"><input type="checkbox" id="balanceOddEven" checked><label for="balanceOddEven">Balance Odd/Even (3/3)</label></div>
       <div class="option-item"><input type="checkbox" id="favorHot"><label for="favorHot">Favor Hot Numbers</label></div>
       <div class="option-item"><input type="checkbox" id="favorCold"><label for="favorCold">Favor Cold Numbers</label></div>
       <div class="option-item"><input type="checkbox" id="includeOverdue" checked><label for="includeOverdue">Include Overdue Numbers</label></div>
-      <div class="option-item"><input type="checkbox" id="useML"><label for="useML">Use ML Predictions</label></div>
+      <div class="option-item"><input type="checkbox" id="useML"><label for="useML">Use ML Model Output</label></div>
     </div>
     <div class="strategy-selector">
       <div class="strategy-item active" data-strategy="balanced">Balanced</div>
@@ -121,7 +131,7 @@
       <h3>Generated Numbers</h3>
       <div id="generatedNumbers" style="margin: 20px 0;"></div>
       <div id="combinationStats" style="margin-bottom: 15px;"></div>
-      <div><span>Confidence: </span><div class="confidence-meter"><div id="confidenceLevel" class="confidence-level"></div></div><span id="confidenceScore" style="margin-left: 10px; font-weight: bold;">0%</span></div>
+      <div><span>Model / heuristic score: </span><div class="confidence-meter"><div id="confidenceLevel" class="confidence-level"></div></div><span id="confidenceScore" style="margin-left: 10px; font-weight: bold;">0 / 100</span></div>
       <div class="button-group" style="margin-top: 20px;">
         <button id="saveComboButton">Save Combination</button>
         <button id="checkSingleButton" class="secondary">Check Against Last Draw</button>
@@ -136,8 +146,9 @@
     <h2>Statistical Analysis & Tools</h2>
     <p class="data-source-info">
         Based on <span id="historicalDrawsCount">0</span> historical draws
-        <button id="refreshDataButton" class="refresh-btn" title="Fetch latest draw data from server">&#x21bb;</button>
+        <button id="refreshDataButton" class="refresh-btn" title="Reload published history and import status" aria-label="Reload published history and import status">&#x21bb;</button>
     </p>
+    <div id="dataStatus" class="prize-notice" role="status">Loading published data status…</div>
     <div class="tab-container">
         <div class="tab-buttons">
             <button class="tab-button active" data-tab="frequency-analysis">Frequency Analysis</button>
@@ -191,7 +202,7 @@
     </div>
   </div>
   
-  <div class="container"><h2>Algorithm Core Features</h2><div class="algorithm-info"><ul><li>Multi-Factor Weighted Selection & Genetic Algorithm</li><li>Configurable Constraints: Sum, Odd/Even, High/Low, Decades</li><li>Temporal Analysis: Recency, Seasonality, Number Cycles</li><li>Pair/Triplet Affinity Analysis, Delta System (Gap Patterns)</li><li>Optional Machine Learning (LSTM Network) for Number Probability Prediction</li><li>Strategy Profiles & Full Customization, Combination Saving & Tracking</li>
+  <div class="container"><h2>Algorithm Core Features</h2><div class="algorithm-info"><ul><li>Multi-Factor Weighted Selection & Genetic Algorithm</li><li>Configurable Constraints: Sum, Odd/Even, High/Low, Decades</li><li>Temporal Analysis: Recency, Seasonality, Number Cycles</li><li>Pair/Triplet Affinity Analysis, Delta System (Gap Patterns)</li><li>Optional Machine Learning (LSTM Network) for Descriptive Model Output</li><li>Strategy Profiles & Full Customization, Combination Saving & Tracking</li>
         <li>Monte Carlo Simulations for Probabilistic Scoring</li>
         <li>Wheeling Systems for Guaranteed Matches</li></ul></div></div>
   <div class="footer"><p>Based on analysis of Lotto 6/49 Quebec historical data.</p><p>This tool uses statistical patterns... Play responsibly.</p></div>
