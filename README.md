@@ -61,6 +61,8 @@ When a complete recorded payout table exists, the worker also runs 10,000 seeded
 
 The `Publish official Lotto results` GitHub Action is the automatic publishing path. It runs after scheduled draws and can be dispatched manually. Parsing, validation, tests, and safe merge must succeed before publishing; no browser-side confirmation is needed because refresh only reads already-published snapshots. A failure keeps the verified snapshot and timestamps, allowing the browser to flag stale data after four days without a successful published check. Consult workflow logs for unpublished failure diagnostics.
 
+In repository **Settings → Pages → Build and deployment**, select **GitHub Actions** as the source and allow the default branch in the `github-pages` environment. After a successful import, tests, and data commit/push, the workflow uploads only the public frontend assets and the validated `historical_data.json` and `data-status.json`, then explicitly deploys that artifact to Pages. The deployment job requires its update job to succeed, so failed imports, tests, or pushes cannot publish a new site. A successful check deploys even when the importer finds no changes. The deploy job uses the workflow token and OIDC with `pages: write` and `id-token: write`; it needs no API keys or repository write permission.
+
 Validate the parser locally without writing either published file:
 
 ```sh

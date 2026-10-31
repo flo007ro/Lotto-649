@@ -45,3 +45,30 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'data: update official Lotto results and import status' -- historical_data.json data-status.json
           git push
+      - name: Stage validated public site
+        run: |
+          mkdir -p "$RUNNER_TEMP/lotto-pages"
+          cp -- index.html style.css script.js optimizer.js advanced_ml_model.js \
+            generation.worker.js backtest.worker.js prize-engine.js prize-optimizer.js \
+            backtester.js historical_data.json data-status.json "$RUNNER_TEMP/lotto-pages/"
+      - name: Upload validated GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ${{ runner.temp }}/lotto-pages
+
+  deploy:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Deploy validated site and data snapshots
+        id: deployment
+        uses: actions/deploy-pages@v4
