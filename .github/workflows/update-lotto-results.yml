@@ -31,11 +31,11 @@ jobs:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
       - name: Import official results
         id: update
-        continue-on-error: true
         run: npm run update:data
       - name: Validate all tests before publishing
         run: npm test
       - name: Commit changed history and import status only
+        if: success() && steps.update.outcome == 'success'
         run: |
           git add -- historical_data.json data-status.json
           if git diff --cached --quiet; then
@@ -45,6 +45,3 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'data: update official Lotto results and import status' -- historical_data.json data-status.json
           git push
-      - name: Report an unsuccessful import after preserving its status
-        if: steps.update.outcome == 'failure'
-        run: exit 1

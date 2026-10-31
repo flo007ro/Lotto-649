@@ -93,23 +93,42 @@ async function fetchOfficialPage(fetchImpl = fetch) {
     return response.text();
 }
 
-async function atomicWrite(file, value) {
-    const temporary = `${file}.${randomUUID()}.tmp`;
+async function publishSnapshots({ dataPath, statusPath, draws, status, previousStatusBytes }) {
+    const token = randomUUID();
+    const statusTemporary = `${statusPath}.${token}.tmp`;
+    const statusBackup = `${statusPath}.${token}.rollback.tmp`;
+    const dataTemporary = `${dataPath}.${token}.tmp`;
+    let statusPublished = false;
     try {
-        await fs.writeFile(temporary, JSON.stringify(value, null, 2) + '\n', { encoding: 'utf8', flag: 'wx' });
-        await fs.rename(temporary, file);
+        // Prepare every replacement and the exact rollback bytes before publishing.
+        await fs.writeFile(statusTemporary, JSON.stringify(status, null, 2) + '\n', { flag: 'wx' });
+        if (previousStatusBytes !== undefined) await fs.writeFile(statusBackup, previousStatusBytes, { flag: 'wx' });
+        if (draws) await fs.writeFile(dataTemporary, JSON.stringify(draws, null, 2) + '\n', { flag: 'wx' });
+        await fs.rename(statusTemporary, statusPath);
+        statusPublished = true;
+        // History replacement is the final fallible publication operation.
+        if (draws) await fs.rename(dataTemporary, dataPath);
+    } catch (error) {
+        if (statusPublished) {
+            if (previousStatusBytes === undefined) await fs.rm(statusPath);
+            else await fs.rename(statusBackup, statusPath);
+        }
+        throw error;
     } finally {
-        await fs.rm(temporary, { force: true });
+        // Cleanup cannot turn a completed publication into a reported failure.
+        await Promise.allSettled([statusTemporary, statusBackup, dataTemporary].map(file => fs.rm(file, { force: true })));
     }
 }
 
 async function runImport({ dataPath = DATA_PATH, statusPath = STATUS_PATH, html,
     fetchPage = fetchOfficialPage, now = new Date().toISOString(), dryRun = false } = {}) {
     let previous = {};
+    let previousStatusBytes;
     let latestDrawDate = null;
     try {
         try {
-            const savedStatus = JSON.parse(await fs.readFile(statusPath, 'utf8'));
+            previousStatusBytes = await fs.readFile(statusPath);
+            const savedStatus = JSON.parse(previousStatusBytes.toString('utf8'));
             if (!savedStatus || typeof savedStatus !== 'object' || Array.isArray(savedStatus)) throw new Error('Invalid status file.');
             previous = savedStatus;
         } catch (error) {
@@ -130,10 +149,8 @@ async function runImport({ dataPath = DATA_PATH, statusPath = STATUS_PATH, html,
             message: merged.changed ? `Imported official draw ${candidate.date}.` : 'Published history already contains this draw.'
         };
         if (!dryRun) {
-            // Publish status first: a status-write failure must not change history.
-            // A data-write failure is caught below and replaces this with error status.
-            await atomicWrite(statusPath, status);
-            if (merged.changed) await atomicWrite(dataPath, merged.draws);
+            await publishSnapshots({ dataPath, statusPath, draws: merged.changed ? merged.draws : null,
+                status, previousStatusBytes });
         }
         return { ok: true, changed: merged.changed, candidate, status, dryRun };
     } catch (error) {
@@ -142,7 +159,8 @@ async function runImport({ dataPath = DATA_PATH, statusPath = STATUS_PATH, html,
             lastSuccessAt: previous.lastSuccessAt ?? null, lastImportedAt: previous.lastImportedAt ?? null,
             latestDrawDate: latestDrawDate ?? previous.latestDrawDate ?? null, message: error.message
         };
-        if (!dryRun) await atomicWrite(statusPath, status);
+        // Failure diagnostics are returned/logged only. Keep the last verified
+        // published snapshot and timestamps intact so consumers can infer staleness.
         return { ok: false, changed: false, status, dryRun };
     }
 }

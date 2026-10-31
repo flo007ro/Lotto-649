@@ -112,13 +112,13 @@ test('official merge flags conflicting recorded payouts without overwriting them
     assert.deepEqual(merged.draws, [previous]);
 });
 
-test('official importer records a failure for malformed status without changing history', async t => {
+test('official importer preserves both source files when status is malformed', async t => {
     const local = await files(t);
     await fs.writeFile(local.statusPath, 'null');
     const result = await runImport({ ...local, html, now });
     assert.equal(result.ok, false);
     assert.equal(await fs.readFile(local.dataPath, 'utf8'), local.data);
-    assert.equal(JSON.parse(await fs.readFile(local.statusPath, 'utf8')).state, 'error');
+    assert.equal(await fs.readFile(local.statusPath, 'utf8'), 'null');
 });
 
 test('official importer writes validated data atomically and preserves prior rows', async t => {
@@ -136,19 +136,22 @@ test('official importer writes validated data atomically and preserves prior row
     assert.deepEqual((await fs.readdir(local.directory)).sort(), ['data-status.json', 'historical_data.json']);
 });
 
-test('official importer preserves history if status publication fails', async t => {
+test('official importer preserves both source files if status publication fails', async t => {
     const local = await files(t);
     const rename = fs.rename;
     t.mock.method(fs, 'rename', async (source, destination) => {
         if (destination === local.statusPath) throw new Error('Status publication unavailable');
         return rename(source, destination);
     });
-    await assert.rejects(runImport({ ...local, html, now }), /Status publication unavailable/);
+    const result = await runImport({ ...local, html, now });
+    assert.equal(result.ok, false);
+    assert.match(result.status.message, /Status publication unavailable/);
     assert.equal(await fs.readFile(local.dataPath, 'utf8'), local.data);
+    assert.equal(await fs.readFile(local.statusPath, 'utf8'), JSON.stringify(local.status));
     assert.deepEqual((await fs.readdir(local.directory)).sort(), ['data-status.json', 'historical_data.json']);
 });
 
-test('official importer records an error and preserves history if data publication fails', async t => {
+test('official importer restores original status bytes if data publication fails', async t => {
     const local = await files(t);
     const rename = fs.rename;
     t.mock.method(fs, 'rename', async (source, destination) => {
@@ -158,24 +161,61 @@ test('official importer records an error and preserves history if data publicati
     const result = await runImport({ ...local, html, now });
     assert.equal(result.ok, false);
     assert.equal(await fs.readFile(local.dataPath, 'utf8'), local.data);
-    const status = JSON.parse(await fs.readFile(local.statusPath, 'utf8'));
-    assert.equal(status.state, 'error');
-    assert.equal(status.lastSuccessAt, local.status.lastSuccessAt);
-    assert.equal(status.latestDrawDate, legacy.date);
+    assert.equal(await fs.readFile(local.statusPath, 'utf8'), JSON.stringify(local.status));
     assert.deepEqual((await fs.readdir(local.directory)).sort(), ['data-status.json', 'historical_data.json']);
 });
 
-test('official importer failures preserve history bytes and retain last success in failure status', async t => {
+test('official importer preserves both source files if replacement preparation fails', async t => {
+    const local = await files(t);
+    const writeFile = fs.writeFile;
+    t.mock.method(fs, 'writeFile', async (file, ...args) => {
+        if (String(file).startsWith(local.dataPath + '.')) throw new Error('Cannot prepare history replacement');
+        return writeFile(file, ...args);
+    });
+    assert.equal((await runImport({ ...local, html, now })).ok, false);
+    assert.equal(await fs.readFile(local.dataPath, 'utf8'), local.data);
+    assert.equal(await fs.readFile(local.statusPath, 'utf8'), JSON.stringify(local.status));
+    assert.deepEqual((await fs.readdir(local.directory)).sort(), ['data-status.json', 'historical_data.json']);
+});
+
+test('official importer preserves malformed history and verified metadata', async t => {
+    for (const data of ['null', '[{"date":"bad"}]', '{invalid']) {
+        const local = await files(t);
+        await fs.writeFile(local.dataPath, data);
+        assert.equal((await runImport({ ...local, html, now })).ok, false);
+        assert.equal(await fs.readFile(local.dataPath, 'utf8'), data);
+        assert.equal(await fs.readFile(local.statusPath, 'utf8'), JSON.stringify(local.status));
+    }
+});
+
+test('official importer restores absent status if history publication fails', async t => {
+    const local = await files(t);
+    await fs.rm(local.statusPath);
+    const rename = fs.rename;
+    t.mock.method(fs, 'rename', async (source, destination) => {
+        if (destination === local.dataPath) throw new Error('Data publication unavailable');
+        return rename(source, destination);
+    });
+    assert.equal((await runImport({ ...local, html, now })).ok, false);
+    assert.equal(await fs.readFile(local.dataPath, 'utf8'), local.data);
+    await assert.rejects(fs.readFile(local.statusPath), { code: 'ENOENT' });
+    assert.deepEqual(await fs.readdir(local.directory), ['historical_data.json']);
+});
+
+test('official importer failures preserve both source files and return diagnostics only', async t => {
     for (const options of [
         { html: await fs.readFile(incompleteFixture, 'utf8') },
         { fetchPage: async () => { throw new Error('network unavailable'); } },
-        { html: altered($ => $('#dateAffichee').text(legacy.date)) }
+        { html: altered($ => $('#dateAffichee').text(legacy.date)) },
+        { html: altered($ => $('#dateAffichee').text('2025-08-06')) },
+        { html: altered($ => $('.principal .valeurLot').eq(1).text('Pending')) }
     ]) {
         const local = await files(t);
         const result = await runImport({ ...local, ...options, now });
         assert.equal(result.ok, false);
         assert.equal(await fs.readFile(local.dataPath, 'utf8'), local.data);
-        const status = JSON.parse(await fs.readFile(local.statusPath, 'utf8'));
+        assert.equal(await fs.readFile(local.statusPath, 'utf8'), JSON.stringify(local.status));
+        const status = result.status;
         assert.equal(status.state, 'error');
         assert.equal(status.lastSuccessAt, local.status.lastSuccessAt);
         assert.equal(status.lastAttemptAt, now);
