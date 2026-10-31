@@ -105,3 +105,35 @@ p.data-source-info { display: flex; align-items: center; }
 label.button { display: inline-block; padding: 12px 20px; cursor: pointer; border-radius: var(--border-radius); background-color: var(--accent-color); color: var(--text-color); transition: background-color 0.3s ease; }
 .input-with-button { display: flex; gap: 10px; }
 .input-with-button input { flex-grow: 1; }
+
+/* Separate Prize Optimization flow: native radios retain keyboard semantics. */
+.prize-strategies { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; border: 0; padding: 0; margin: 20px 0; min-width: 0; }
+.prize-strategies legend { font-weight: 600; margin-bottom: 10px; }
+.prize-strategy-card { display: flex; align-items: flex-start; gap: 10px; padding: 18px; border: 2px solid var(--border-color); border-radius: 10px; cursor: pointer; overflow-wrap: anywhere; }
+.prize-strategy-card input { flex: 0 0 auto; margin: 6px 0 0; accent-color: var(--primary-color); }
+.prize-strategy-card:has(input:checked) { border-color: var(--primary-color); background-color: var(--background-color); }
+.prize-strategy-card:focus-within { outline: 3px solid var(--secondary-color); outline-offset: 3px; }
+.prize-card-content { display: flex; flex-direction: column; gap: 10px; }
+.prize-card-content strong { color: var(--primary-color); font-size: 1.05rem; }
+.prize-card-content small { display: inline-block; font-size: 0.75rem; border: 1px solid var(--primary-color); border-radius: 4px; padding: 0 5px; }
+.prize-card-content > span { font-size: 0.9rem; }
+.prize-strategy-explanation { min-height: 3.2em; padding: 12px 16px; border-left: 3px solid var(--primary-color); background-color: var(--background-color); }
+.prize-strategy-explanation [data-prize-explanation] { display: none; }
+.prize-optimization:has(#prizeFrequent:checked) [data-prize-explanation="frequent"],
+.prize-optimization:has(#prizeReturn:checked) [data-prize-explanation="return"],
+.prize-optimization:has(#prizeBalanced:checked) [data-prize-explanation="balanced"] { display: inline; }
+.prize-budget-controls { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; margin: 24px 0; }
+.prize-budget-field, .prize-ticket-summary { display: flex; flex-direction: column; gap: 7px; }
+.prize-budget-field label, .prize-ticket-summary > span { font-weight: 600; }
+.prize-budget-field input { box-sizing: border-box; width: 100%; max-width: 180px; padding: 10px; font: inherit; color: var(--text-color); background-color: var(--container-bg-color); border: 1px solid var(--border-color); border-radius: 6px; }
+.prize-budget-field input:focus-visible { outline: 3px solid var(--secondary-color); outline-offset: 2px; }
+.prize-ticket-summary output { font-size: 1.8rem; font-weight: 700; color: var(--primary-color); }
+.prize-notice { border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 16px; font-size: 0.9rem; }
+.prize-coverage-details { margin-top: 16px; font-size: 0.9rem; }
+.prize-coverage-details summary { cursor: pointer; font-weight: 600; }
+@media (max-width: 700px) {
+  .prize-optimization { margin: 1rem; padding: 1.25rem; }
+  .prize-strategies, .prize-budget-controls { grid-template-columns: minmax(0, 1fr); }
+  .prize-strategy-explanation { min-height: 0; }
+  .prize-optimization .button-group button { width: 100%; }
+}

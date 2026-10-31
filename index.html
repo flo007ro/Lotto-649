@@ -21,6 +21,49 @@
     <p>Advanced statistical analysis and machine learning for optimized number selection</p>
   </header>
   
+  <section class="container prize-optimization" id="prizeOptimization" aria-labelledby="prizeOptimizationTitle">
+    <h2 id="prizeOptimizationTitle">Prize Optimization</h2>
+    <p>Choose a ticket-group coverage objective, then set your total ticket budget.</p>
+    <fieldset class="prize-strategies" aria-describedby="prizeNoPrediction">
+      <legend>Choose one strategy</legend>
+      <label class="prize-strategy-card" for="prizeFrequent">
+        <input type="radio" id="prizeFrequent" name="prizeStrategy" value="frequent">
+        <span class="prize-card-content"><strong>Frequent Wins</strong><span>Spread pairs and triplets across tickets to reduce repeated coverage of smaller match outcomes. Prizes are never guaranteed.</span></span>
+      </label>
+      <label class="prize-strategy-card" for="prizeReturn">
+        <input type="radio" id="prizeReturn" name="prizeStrategy" value="return">
+        <span class="prize-card-content"><strong>Maximum Return</strong><span>Explore return distributions with simulation and backtesting. Ticket search prioritizes triplet coverage as a proxy, not profit.</span></span>
+      </label>
+      <label class="prize-strategy-card" for="prizeBalanced">
+        <input type="radio" id="prizeBalanced" name="prizeStrategy" value="balanced" checked>
+        <span class="prize-card-content"><strong>Balanced <small>Default</small></strong><span>Give pair and triplet coverage equal weight. Review coverage and financial results separately.</span></span>
+      </label>
+    </fieldset>
+    <p id="prizeStrategyExplanation" class="prize-strategy-explanation" aria-live="polite">
+      <span data-prize-explanation="frequent">Frequent Wins accepts a candidate only when neither repeated pair nor repeated triplet coverage increases.</span>
+      <span data-prize-explanation="return">Maximum Return searches for fewer repeated triplets, then fewer repeated pairs. Financial comparison requires separate simulation or backtesting.</span>
+      <span data-prize-explanation="balanced">Balanced minimizes an equally weighted combination of repeated pair and triplet coverage fractions.</span>
+    </p>
+    <div class="prize-budget-controls">
+      <div class="prize-budget-field">
+        <label for="prizeBudget">Ticket budget ($)</label>
+        <input type="number" id="prizeBudget" min="3" step="3" value="30" required aria-describedby="prizeBudgetHelp">
+        <small id="prizeBudgetHelp">Use a positive multiple of $3. Each ticket costs $3; partial-ticket budgets are rejected.</small>
+      </div>
+      <div class="prize-ticket-summary">
+        <span id="prizeTicketCountLabel">Ticket count</span>
+        <output id="prizeTicketCount" for="prizeBudget" aria-labelledby="prizeTicketCountLabel" aria-live="polite">10</output>
+        <small>Calculated from your budget</small>
+      </div>
+    </div>
+    <p id="prizeNoPrediction" class="prize-notice">This flow uses coverage search, not ML or number prediction. In a fair draw, selecting different Classic numbers does not increase expected profit. Group optimization redistributes coverage and outcomes. Gold Ball is excluded.</p>
+    <details class="prize-coverage-details">
+      <summary>How coverage is measured</summary>
+      <p>Each ticket contains 15 pairs and 20 triplets. Repeated coverage is the total occurrences minus the distinct subsets across the group. The seeded search compares 64 candidate groups with an initial random group by default. These counts are separate from win rates and dollar returns.</p>
+    </details>
+    <div class="button-group"><button id="generatePrizeTicketsButton" type="button">Generate Prize Ticket Group</button></div>
+  </section>
+
   <div class="container">
     <h2>Number Generator</h2>
     <div class="options">
@@ -154,6 +197,8 @@
   <div class="footer"><p>Based on analysis of Lotto 6/49 Quebec historical data.</p><p>This tool uses statistical patterns... Play responsibly.</p></div>
   <div id="notification" class="notification"></div>
 
+  <script src="prize-engine.js"></script>
+  <script src="prize-optimizer.js"></script>
   <script src="advanced_ml_model.js"></script> 
   <script src="optimizer.js"></script>
   <script src="script.js"></script>
