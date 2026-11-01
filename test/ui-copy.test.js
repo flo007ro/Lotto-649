@@ -62,13 +62,13 @@ test('worker preserves full history, 100-draw warmup, baseline population and pr
     assert.ok(messages.filter(m => m.type === 'progress').length >= 2);
 });
 
-test('optional Jev card explains metrics and configuration without winning claims', () => {
+test('optional Jev card uses the deployed proxy and explains metrics without winning claims', () => {
     const html = read('index.html');
     assert.match(html, /id="jevDecisionCard"/);
     assert.match(html, /supplied historical\/mathematical metrics/);
     assert.match(html, /id="requestJevDecisionButton"[^>]*disabled/);
     assert.match(html, /Assessment confidence/);
-    assert.match(read('jev-config.js'), /endpoint:\s*''/);
+    assert.match(read('jev-config.js'), /endpoint:\s*'https:\/\/lotto-649\.vercel\.app\/api\/jev-decision'/);
     for (const name of ['jev-config.js', 'jev-client.js', 'script.js', 'index.html']) assert.doesNotMatch(read(name), /TYPESAFE_API_KEY/);
 });
 
