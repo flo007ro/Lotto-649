@@ -1,9 +1,9 @@
 {
   "state": "success",
   "sourceUrl": "https://loteries.lotoquebec.com/en/lotteries/lotto-6-49-resultats",
-  "lastAttemptAt": "2026-11-01T12:48:29.710Z",
-  "lastSuccessAt": "2026-11-01T12:48:29.710Z",
-  "lastImportedAt": "2026-11-01T12:48:29.710Z",
-  "latestDrawDate": "2026-10-31",
-  "message": "Imported official draw 2026-10-31."
+  "lastAttemptAt": "2026-11-05T14:09:24.337Z",
+  "lastSuccessAt": "2026-11-05T14:09:24.337Z",
+  "lastImportedAt": "2026-11-05T14:09:24.337Z",
+  "latestDrawDate": "2026-11-04",
+  "message": "Imported official draw 2026-11-04."
 }
